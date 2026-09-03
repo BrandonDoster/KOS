@@ -1,0 +1,8 @@
+# Source artifact and everything extracted from it — regenerable, see README.md
+*.7z
+*.img
+parts/
+rootfs/
+boot0/
+boot1/
+env4/
