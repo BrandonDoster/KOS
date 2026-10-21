@@ -3,7 +3,8 @@
 # Needs Docker.
 set -eu
 cd "$(dirname "$0")/.."
-docker run --rm -i --platform linux/amd64 -v "$PWD/overlay:/ov:ro" debian:trixie bash -eu <<'EOF'
+IMG=$(sed -n 's/^DEBIAN_IMAGE=//p' build/pins.env)   # the build container, by digest
+docker run --rm -i --platform linux/amd64 -v "$PWD/overlay:/ov:ro" "$IMG" bash -eu <<'EOF'
 apt-get update -qq >/dev/null; apt-get install -y -qq nginx-light curl python3 >/dev/null 2>&1
 cd /etc/nginx && rm -f sites-enabled/default
 cp /ov/etc/nginx/conf.d/* conf.d/ && cp /ov/etc/nginx/sites-available/mainsail sites-enabled/

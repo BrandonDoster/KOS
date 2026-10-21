@@ -12,6 +12,7 @@ MOONRAKER_REF=${MOONRAKER_REF:-9e676eb}
 CAN_BITRATE=${CAN_BITRATE:-1M}
 PD=$HOME/printer_data
 for d in klipper moonraker klippy-env moonraker-env; do
+    # shellcheck disable=SC2088  # "~/" is shown to the user, not expanded
     [ -d "$HOME/$d" ] || { echo "~/$d missing: install Klipper, Moonraker and Mainsail with KIAUH first" >&2; exit 1; }
 done
 

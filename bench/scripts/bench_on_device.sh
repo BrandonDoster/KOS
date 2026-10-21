@@ -71,6 +71,7 @@ kpid=$(pgrep -f 'klippy/klippy.py' | head -1 || true)
 cpus=$( [ -n "$kpid" ] && taskset -cp "$kpid" | awk -F': ' '{print $2}' || echo "0-$(($(nproc) - 1))")
 put klippy_cpus "$cpus"
 lat() {   # $1 = name; histogram in µs, summarised to p50/p99/p99.9/max
+    # shellcheck disable=SC2024  # the user writes the results file; only cyclictest needs root
     sudo cyclictest -q -m --policy=other -p 0 -a "$cpus" -t 1 -i 1000 -D "$LAT" -h 20000 > "$R/$1.hist" 2>/dev/null
 }
 log "latency, idle (${LAT}s)"; lat lat_idle

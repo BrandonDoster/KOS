@@ -2,7 +2,7 @@
 # Everything that can be checked without hardware or Docker.
 set -eu
 cd "$(dirname "$0")/.."
-for f in overlay/usr/lib/kos/kos-config overlay/usr/lib/kos/kos-ssh-key overlay/usr/lib/kos/kos-tune overlay/usr/lib/kos/kos-trash-purge overlay/usr/lib/kos/kos-cm5-carrier build/*.sh build/boards/*/*.sh tests/*.sh tests/device/*.sh bench/scripts/*.sh; do
+for f in overlay/usr/lib/kos/lib.sh overlay/etc/profile.d/kos-trash.sh overlay/usr/lib/kos/kos-config overlay/usr/lib/kos/kos-ssh-key overlay/usr/lib/kos/kos-tune overlay/usr/lib/kos/kos-trash-purge overlay/usr/lib/kos/kos-cm5-carrier build/*.sh build/boards/*/*.sh tests/*.sh tests/device/*.sh bench/scripts/*.sh; do
     bash -n "$f"
 done
 python3 overlay/usr/lib/kos/kos-mcu-discover --test

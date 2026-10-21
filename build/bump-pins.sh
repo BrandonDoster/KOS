@@ -54,6 +54,7 @@ for k in KLIPPER_COMMIT MOONRAKER_COMMIT MAINSAIL_CONFIG_COMMIT MAINSAIL_VERSION
     eval "v=\$$k"
     grep -q "^$k=" "$T/new" || { echo "bump-pins: $k missing from $PINS" >&2; exit 1; }
     old=$(sed -n "s/^$k=//p" "$T/new")
+    # shellcheck disable=SC2154  # v is set by the eval above
     [ "$old" = "$v" ] && continue
     echo "$k: $old -> $v"
     sed "s|^$k=.*|$k=$v|" "$T/new" > "$T/tmp"   # not "&& mv": set -e must stop on a failed sed

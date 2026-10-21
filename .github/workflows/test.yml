@@ -7,11 +7,59 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every job is hardware-free and needs no secrets, so all of them can be required checks on pull requests.
+# Containers come from pinned digests: debian:trixie from build/pins.env, the linters in tests/lint_docker.sh.
 jobs:
-  test:
+  unit:
+    name: unit (tests/run.sh)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
       - run: sh tests/run.sh
+
+  lint:
+    name: lint (shellcheck, actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - run: sh tests/lint_docker.sh
+
+  config:
+    name: config (units, sudoers, sshd, kos-config)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - run: sh tests/config_docker.sh
+
+  nginx:
+    name: nginx (Host and Origin checks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - run: sh tests/nginx_docker.sh
+
+  mkimage:
+    name: mkimage (partitioning round-trip)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - run: sh tests/mkimage_docker.sh
