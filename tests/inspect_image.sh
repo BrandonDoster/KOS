@@ -36,6 +36,16 @@ dd if="$IMG" of=/tmp/root.fs bs=1M skip=$((ROOT_OFF / 1048576)) count=$((ROOT_LE
 r() { debugfs -R "$1" /tmp/root.fs 2>/dev/null; }
 echo "--- /boot"; r "ls -l /boot" | awk '{print $NF}' | tr '\n' ' '; echo
 [ -n "$(r 'cat /boot/armbianEnv.txt')" ] && { echo "--- armbianEnv.txt"; r "cat /boot/armbianEnv.txt" | grep -v '^#'; }
+# A kernel with CONFIG_RT_GROUP_SCHED needs rt_group_sched=0, or klipper_mcu -r loses realtime once a login delegates
+# the cpu controller (Sindri, 2026-10-21: "mcu 'host': Unable to connect").
+for c in $(r "ls /boot" | tr -s ' \n' '\n' | grep '^config-' || true); do
+    kcfg=$(r "cat /boot/$c")
+    case "$kcfg" in *"
+CONFIG_RT_GROUP_SCHED=y"*) ;; *) continue ;; esac
+    args="$(r 'cat /boot/armbianEnv.txt' | grep '^extraargs=' || true) $(for f in $FATS; do mtype -i "$IMG@@${f%%:*}" ::cmdline.txt 2>/dev/null || true; done)"
+    case " $args " in *" rt_group_sched=0 "*) echo "--- $c: RT_GROUP_SCHED=y, rt_group_sched=0 set: ok" ;;
+        *) echo "FAIL: $c has CONFIG_RT_GROUP_SCHED=y but the kernel args lack rt_group_sched=0"; exit 1 ;; esac
+done
 echo "--- fstab"; r "cat /etc/fstab" | grep -v '^#'
 echo "--- enabled units"; r "ls /etc/systemd/system/multi-user.target.wants" | tr -s ' \n' '\n' | grep -E '\.(service|target)$' | tr '\n' ' '; echo
 echo "--- masked"; for u in apt-daily.timer man-db.timer systemd-networkd-wait-online.service; do printf '%s: ' "$u"; r "stat /etc/systemd/system/$u" | grep -o '"/dev/null"' || echo not-masked; done

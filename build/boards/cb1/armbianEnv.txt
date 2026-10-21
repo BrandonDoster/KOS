@@ -9,5 +9,7 @@ docker_optimizations=off
 # isolcpus=3: klipper.service pins Klippy to core 3 (PLAN §10). cpufreq.default_governor: mainline spelling (PLAN §10).
 # video=HDMI-A-1:d: display=none default (PLAN §16.2); kos-config removes it when kos.conf says display=hdmi.
 # ipv6.disable=1: IPv4 only (docs/plan.md §11).
-extraargs=isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d ipv6.disable=1
+# rt_group_sched=0: Armbian's kernel has CONFIG_RT_GROUP_SCHED; once systemd's user manager (tty1 autologin) delegates
+# the cpu controller, services get no realtime budget and klipper_mcu -r fails (sched_setscheduler: EPERM).
+extraargs=isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d ipv6.disable=1 rt_group_sched=0
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u

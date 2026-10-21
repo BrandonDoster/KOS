@@ -45,6 +45,11 @@ The first version (V1). Not released yet; build it from source.
 
 ### Changed
 
+- CB1: kernel argument `rt_group_sched=0`. Armbian's kernel has realtime group scheduling, and once systemd's user
+  manager (the tty1 autologin) delegates the cpu controller, `klipper_mcu -r` was refused realtime and the host MCU
+  never came up ("mcu 'host': Unable to connect"). `tests/inspect_image.sh` now fails any image whose kernel has
+  `CONFIG_RT_GROUP_SCHED=y` without that argument.
+
 - `kos.conf` comments start only at the beginning of a line: `password=a #b` is the password `a #b`.
 - Moonraker listens on `127.0.0.1` only and no longer advertises itself over mDNS; apps and slicers use
   `http://<printer>` on port 80.
