@@ -41,6 +41,14 @@ jobs:
       # Nothing is uploaded, so nothing published, unless owners and the modes sshd and sudo check are right.
       - name: inspect
         run: sh tests/inspect_image.sh out/kos-"$BOARD"-*.img
+      # Boots the image's rootfs under systemd (nspawn) and checks first boot, SSH, nginx, listeners and update gating.
+      # Not blocking until it has passed on the runner a few times: its failed-unit allowlist and Moonraker timing are
+      # first guesses (it can't run on Docker Desktop). Drop continue-on-error once it's stable.
+      - name: boot smoke test
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq systemd-container
+          sudo bash tests/boot/boot_smoke.sh out/kos-"$BOARD"-*.img
       - name: compress
         run: |
           sudo chown -R "$(id -u):$(id -g)" out   # the container wrote as root

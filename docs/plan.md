@@ -570,6 +570,7 @@ Bugs found on hardware and fixed in source (all in the pm builds):
 |---|---|---|
 | Debian's nginx `default` site left enabled | nginx fails: duplicate `default_server` on :80 | `customize.sh` removes it |
 | `/var/log` is tmpfs | nginx fails: `/var/log/nginx` missing at boot | `overlay/etc/tmpfiles.d/kos-nginx.conf` |
+| `/var/log` is tmpfs | `kos-security-updates.service` fails: unattended-upgrade traceback, `/var/log/unattended-upgrades` missing | `overlay/etc/tmpfiles.d/kos-unattended-upgrades.conf` |
 | trixie `HOME_MODE` 0700 | web UI 403 | `chmod 0711 /home/klipper` |
 | `RestartSec=100ms` in `99-can.network` (from FlyOS) | `can0` fails on gs_usb: "Device doesn't support restart from Bus Off" | line removed |
 | Build container id in `/etc/hostname` | wrong hostname until `kos-config` ran | `customize.sh` writes `kos` |

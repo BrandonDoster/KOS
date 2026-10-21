@@ -27,8 +27,9 @@ apt-config dump Unattended-Upgrade::Automatic-Reboot | grep -qx 'Unattended-Upgr
 v=$(findmnt --verify --tab-file /etc/fstab 2>&1 || true)
 printf '%s\n' "$v" | grep -q '^0 parse errors, .* 0 warnings$' && ! printf '%s\n' "$v" | grep '\[E\]' | grep -qv 'unreachable on boot' || { printf '%s\n' "$v"; exit 1; }
 ok "fstab parses"
-systemd-tmpfiles --create /etc/tmpfiles.d/kos-nginx.conf
+systemd-tmpfiles --create /etc/tmpfiles.d/kos-nginx.conf /etc/tmpfiles.d/kos-unattended-upgrades.conf
 [ "$(stat -c %U:%G:%a /var/log/nginx)" = www-data:adm:755 ]
+[ "$(stat -c %U:%G:%a /var/log/unattended-upgrades)" = root:root:755 ]   # /var/log is tmpfs; unattended-upgrade crashes without it
 ok "tmpfiles"
 # The venvs and the units' other targets come from the build; empty executables stand in for them.
 for f in /home/klipper/klippy-env/bin/python /home/klipper/moonraker-env/bin/python /usr/bin/unattended-upgrade; do

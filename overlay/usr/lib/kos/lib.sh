@@ -34,7 +34,7 @@ cfg_lines() {
         { cont = 0; emit() }
         END { if (cont) { emit(); if (k == "=") print "the last line ends in \\ (a continuation with nothing after it): the \\ was dropped" } }'
 }
-cfg_problems() { cfg_lines =; }
+cfg_problems() { cfg_lines '='; }
 
 # cfg KEY [DEFAULT]: the value of the last KEY entry, or DEFAULT when absent or empty.
 cfg() {
