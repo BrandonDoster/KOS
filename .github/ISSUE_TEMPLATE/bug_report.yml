@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in a KOS image does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems: please report them privately instead (see SECURITY.md).
+  - type: dropdown
+    id: board
+    attributes:
+      label: Board
+      options:
+        - BigTreeTech CB1
+        - Raspberry Pi CM5
+        - Raspberry Pi CM4
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: carrier
+    attributes:
+      label: Carrier board and MCUs
+      description: For example "BTT Manta M5P, EBB36 over CAN".
+  - type: input
+    id: image
+    attributes:
+      label: Image file name or version
+      description: For example `kos-cb1-20261020.img`, or the release tag.
+    validations:
+      required: true
+  - type: input
+    id: flashing
+    attributes:
+      label: How it was flashed
+      description: Tool and medium, for example "Raspberry Pi Imager, 32 GB SD card" or "rpiboot to eMMC".
+    validations:
+      required: true
+  - type: textarea
+    id: kosconf
+    attributes:
+      label: Relevant kos.conf keys
+      description: Only the keys that matter. Remove passwords, Wi-Fi passwords and SSH keys before posting.
+      render: ini
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Attach `printer_data/logs/klippy.log` and the output of `journalctl -b` (run on the printer).
+        For boot problems, `journalctl -b -u kos-config -u kos-mcu-discover` and `MCU-DISCOVERY.txt` from the KOS partition if it exists.
+      render: text

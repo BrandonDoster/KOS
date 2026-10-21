@@ -1,0 +1,5 @@
+# Follow sourced files relative to the script that sources them.
+source-path=SCRIPTDIR
+external-sources=true
+# Files sourced from the target system (/etc/profile.d, /usr/lib/kos/lib.sh on the device) are not in the checkout.
+disable=SC1091
