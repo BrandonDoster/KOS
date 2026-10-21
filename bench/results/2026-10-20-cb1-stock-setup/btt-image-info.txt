@@ -1,0 +1,55 @@
+# Identity and boot settings of the BTT CB1 image under test. Trimmed: armbianEnv.txt and system.cfg keep only
+# their active settings; BTT's documentation comments were removed.
+
+# /etc/armbian-release
+BOARD=bigtreetech-cb1
+BOARD_NAME="BigTreeTech CB1"
+BOARDFAMILY=sun50iw9
+BUILD_REPOSITORY_URL=https://github.com/armbian/build
+BUILD_REPOSITORY_COMMIT=c819d9f50
+LINUXFAMILY=sunxi64
+ARCH=arm64
+BOOT_SOC=
+IMAGE_TYPE=user-built
+BOARD_TYPE=conf
+INITRD_ARCH=arm64
+KERNEL_IMAGE_TYPE=Image
+KERNEL_TARGET=vendor,current,edge
+KERNEL_TEST_TARGET=vendor
+FORCE_BOOTSCRIPT_UPDATE=yes
+FORCE_UBOOT_UPDATE=
+OVERLAY_DIR="/boot/dtb/allwinner/overlay"
+VENDOR="BIGTREETECH-CB1"
+VENDORCOLOR="247;16;0"
+VENDORDOCS="https://docs.armbian.com/"
+VENDORURL="https://duckduckgo.com/"
+VENDORSUPPORT="https://community.armbian.com/"
+VENDORBUGS="https://armbian.atlassian.net/"
+BOOTSCRIPT_FORCE_UPDATE="yes"
+BOOTSCRIPT_DST="boot.cmd"
+VERSION=3.1.0-26.05.0-trunk
+REVISION=3.1.0-26.05.0-trunk
+
+# /boot/armbianEnv.txt (active settings)
+verbosity=1
+extraboardargs=selinux=0
+bootlogo=false
+disp_mode=1024x600p60
+overlay_prefix=sun50i-h616
+fdtfile=sun50i-h616-bigtreetech-cb1-sd.dtb
+console=display
+overlays=hdmi
+rootdev=UUID=98a35c3f-0d3b-4eb6-984c-3205a7acd52d
+rootfstype=ext4
+usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
+
+# /boot/system.cfg, BTT's Wi-Fi and screen settings (active settings)
+check_interval=5
+eth=eth0
+wlan=wlan0
+BTT_PAD7='OFF'
+TOUCH_VIBRATION='OFF'
+TOUCH_SOUND='OFF'
+AUTO_BRIGHTNESS='OFF'
+
+flashed: CB1_Debian13_Klipper_kernel7.0_20260430.img.xz (4219a3c582a777e96a0cf46d6516c4e8037d7709225c0e9c648dddc2dcdd5afc)

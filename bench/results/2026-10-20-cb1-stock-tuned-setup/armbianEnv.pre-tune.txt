@@ -1,0 +1,12 @@
+# /boot/armbianEnv.txt on BTT's CB1 image before stock_tune.sh, active settings only (BTT's overlay and pin documentation comments removed). No extraargs, so no isolcpus or governor argument.
+verbosity=1
+extraboardargs=selinux=0
+bootlogo=false
+disp_mode=1024x600p60
+overlay_prefix=sun50i-h616
+fdtfile=sun50i-h616-bigtreetech-cb1-sd.dtb
+console=display
+overlays=hdmi
+rootdev=UUID=98a35c3f-0d3b-4eb6-984c-3205a7acd52d
+rootfstype=ext4
+usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
