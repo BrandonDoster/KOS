@@ -93,7 +93,7 @@ c ssh-keygen -A >/dev/null && check "ssh-keygen -A makes ed25519/ecdsa/rsa" test
 mkdir -p $W/r/run/sshd   # ssh.service's RuntimeDirectory
 check "sshd -t" c /usr/sbin/sshd -t
 T=$(c /usr/sbin/sshd -T 2>&1)
-for want in "authorizedkeysfile /etc/kos/authorized_keys/%u" "permitrootlogin no" "addressfamily inet" "pubkeyauthentication yes"; do
+for want in "authorizedkeysfile /etc/kos/authorized_keys/%u" "permitrootlogin no" "addressfamily inet" "pubkeyauthentication yes" "allowtcpforwarding no" "x11forwarding no" "allowagentforwarding no"; do
     printf '%s\n' "$T" | grep -qx "$want" && ok "sshd -T: $want" || bad "sshd -T: $want"
 done
 info "sshd -T: $(printf '%s\n' "$T" | grep -E '^(passwordauthentication|kbdinteractiveauthentication|listenaddress|x11forwarding|allowtcpforwarding) ' | tr '\n' ';')"

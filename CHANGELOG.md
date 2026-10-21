@@ -54,6 +54,8 @@ The first version (V1). Not released yet; build it from source.
 
 ### Security
 
+- sshd allows no TCP, X11, agent or socket forwarding and no tunnels, so an SSH key cannot be used to reach Moonraker on
+  127.0.0.1:7125 around nginx's Host/Origin checks. Login, scp and sftp are unaffected.
 - Images now include Debian's `trixie-security` and `trixie-updates` sources (https), so `apt` and Mainsail's system
   update install security fixes.
 - The build container is pinned by digest and mounts the repository read-only; CI builds with a read-only token, and

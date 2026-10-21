@@ -133,7 +133,7 @@ done
 # 4. sshd
 for t in ed25519 ecdsa rsa; do check "host key $t generated" kos test -s "/etc/ssh/ssh_host_${t}_key"; done
 T=$(kos sshd -T 2>&1)
-for want in "authorizedkeysfile /etc/kos/authorized_keys/%u" "permitrootlogin no" "addressfamily inet"; do
+for want in "authorizedkeysfile /etc/kos/authorized_keys/%u" "permitrootlogin no" "addressfamily inet" "allowtcpforwarding no" "x11forwarding no"; do
     printf '%s\n' "$T" | grep -qx "$want" && ok "sshd -T: $want" || bad "sshd -T: $want"
 done
 check "klipper password locked (no password= given)" test "$(kos getent shadow klipper | cut -d: -f2)" = '*'

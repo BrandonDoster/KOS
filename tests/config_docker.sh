@@ -19,7 +19,7 @@ ok() { echo "ok   $*"; }
 visudo -cf /etc/sudoers.d/klipper >/dev/null && visudo -c >/dev/null && ok "sudoers" || exit 1
 mkdir -p /run/sshd /etc/kos/authorized_keys && ssh-keygen -A >/dev/null && sshd -t || exit 1
 sshd -T -C user=klipper | grep -qx 'authorizedkeysfile /etc/kos/authorized_keys/%u'   # the drop-in wins over sshd_config
-sshd -T | grep -qx 'permitrootlogin no' && sshd -T | grep -qx 'addressfamily inet' && ok "sshd drop-in" || exit 1
+sshd -T | grep -qx 'permitrootlogin no' && sshd -T | grep -qx 'addressfamily inet' && sshd -T | grep -qx 'allowtcpforwarding no' && sshd -T | grep -qx 'x11forwarding no' && ok "sshd drop-in" || exit 1
 [ "$(apt-config dump Unattended-Upgrade::Origins-Pattern | grep -c '^Unattended-Upgrade::Origins-Pattern:: ')" -eq 1 ]
 apt-config dump Unattended-Upgrade::Origins-Pattern | grep -qF '"origin=Debian,codename=${distro_codename}-security,label=Debian-Security";'
 apt-config dump Unattended-Upgrade::Automatic-Reboot | grep -qx 'Unattended-Upgrade::Automatic-Reboot "false";' && ok "unattended-upgrades: security origin only, no reboot" || exit 1
