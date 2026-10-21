@@ -1,0 +1,22 @@
+#!/bin/sh
+# CM5 on a CM4-style carrier (BTT Manta M5P / M8P and similar; docs/cm5-on-manta.md), from kos.conf:
+#   carrier_dt=on      keep the CM4-carrier device_tree= lines (config.txt picks Lite/eMMC by [board-type=]); off comments them
+#   serial_console=on  dtparam=uart0_console (Linux console on GPIO14/15)
+#   sd_3v3_only=off    sdhci.debug_quirks2=0x4 on the command line (SD card kept at 3.3 V: warm-reboot fix, slower)
+# Run by kos-config every boot; edits take effect on the next boot. Does nothing on anything but a CM5.
+# KOS_FW and KOS_DT_MODEL override the paths for tests/test_cm5_carrier.sh.
+L=/usr/lib/kos/lib.sh; [ -f "$L" ] || L=$(dirname "$0")/lib.sh   # dash exits on '. missing-file', so test first
+. "$L"
+FW=${KOS_FW:-/boot/firmware}
+MODEL=${KOS_DT_MODEL:-/proc/device-tree/model}
+[ -f "$FW/config.txt" ] && grep -qa "Compute Module 5" "$MODEL" 2>/dev/null || exit 0
+
+old=$(cat "$FW/config.txt" "$FW/cmdline.txt")
+if [ "$(cfg carrier_dt on)" = on ]; then sed -i 's|^#\(device_tree=bcm2712-rpi-cm5l*-cm4io\.dtb\)$|\1|' "$FW/config.txt"
+else sed -i 's|^\(device_tree=bcm2712-rpi-cm5l*-cm4io\.dtb\)$|#\1|' "$FW/config.txt"; fi
+if [ "$(cfg serial_console on)" = on ]; then sed -i 's|^#*dtparam=uart0_console|dtparam=uart0_console|' "$FW/config.txt"
+else sed -i 's|^#*dtparam=uart0_console|#dtparam=uart0_console|' "$FW/config.txt"; fi
+sed -i 's/ *sdhci\.debug_quirks2=0x4//' "$FW/cmdline.txt"
+if [ "$(cfg sd_3v3_only off)" = on ]; then sed -i '1 s/$/ sdhci.debug_quirks2=0x4/' "$FW/cmdline.txt"; fi
+[ "$old" = "$(cat "$FW/config.txt" "$FW/cmdline.txt")" ] || log "CM5 carrier settings changed; they take effect on the next boot"
+exit 0

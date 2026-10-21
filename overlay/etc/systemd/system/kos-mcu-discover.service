@@ -1,0 +1,12 @@
+[Unit]
+Description=KOS: match [mcu] sections to attached boards
+After=kos-config.service systemd-networkd.service
+Before=klipper.service
+
+[Service]
+Type=oneshot
+User=klipper
+ExecStart=/usr/lib/kos/kos-mcu-discover
+
+[Install]
+WantedBy=multi-user.target

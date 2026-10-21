@@ -1,0 +1,3 @@
+# zram-tools. PLAN §7/§16.4: swap at 50% of RAM, zstd.
+ALGO=zstd
+PERCENT=50

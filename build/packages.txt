@@ -1,0 +1,15 @@
+# Common to all boards. One or more packages per line; '#' comments.
+# base system
+systemd systemd-sysv systemd-timesyncd udev dbus kmod initramfs-tools
+tzdata ca-certificates sudo openssh-server less nano procps
+e2fsprogs dosfstools fdisk cloud-guest-utils zram-tools trash-cli
+# network
+network-manager wpasupplicant wireless-regdb iw iproute2 iputils-ping
+avahi-daemon libnss-mdns curl git unzip usbutils can-utils
+# web
+nginx-light
+# klipper / moonraker runtime + build deps (Klipper compiles chelper on first start)
+python3 python3-venv python3-dev python3-numpy
+build-essential libffi-dev libsodium23 libjpeg62-turbo libopenjp2-7 zlib1g
+# moonraker [machine] via dbus/polkit, system updates via packagekit
+polkitd packagekit

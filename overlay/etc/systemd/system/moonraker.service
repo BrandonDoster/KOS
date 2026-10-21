@@ -1,0 +1,18 @@
+[Unit]
+Description=API Server for Klipper
+Documentation=https://moonraker.readthedocs.io/
+After=network-online.target kos-config.service
+Wants=network-online.target udev.target
+
+[Service]
+Type=simple
+User=klipper
+Nice=-18
+IOSchedulingPriority=2
+WorkingDirectory=/home/klipper/moonraker
+ExecStart=/home/klipper/moonraker-env/bin/python /home/klipper/moonraker/moonraker/moonraker.py -d /home/klipper/printer_data
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

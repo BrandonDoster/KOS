@@ -1,0 +1,23 @@
+#!/bin/sh
+# Empties the recycle bin (trash-cli; every user, every volume). Run hourly by kos-trash-purge.timer.
+# Anything trashed more than 30 days ago goes; then, while / or printer_data has under 10% free,
+# the oldest remaining day goes, one day at a time, until there is room or the trash is empty.
+set -u
+DAYS=30
+MIN_FREE_PCT=10
+
+low() {
+    for m in / /home/klipper/printer_data; do
+        df -P "$m" | awk -v min="$MIN_FREE_PCT" 'NR==2 { exit !($4 * 100 / $2 < min) }' && return 0
+    done
+    return 1
+}
+
+purge() { trash-empty --all-users -f "$1"; }
+
+purge "$DAYS"
+d=$DAYS
+while [ "$d" -gt 0 ] && low; do
+    d=$((d - 1))
+    purge "$d"
+done

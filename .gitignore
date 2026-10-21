@@ -1,4 +1,4 @@
-# Source artifact and everything extracted from it — regenerable, see README.md
+# Source artifact and everything extracted from it — regenerable, see TEARDOWN.md
 *.7z
 *.img
 parts/
@@ -6,3 +6,10 @@ rootfs/
 boot0/
 boot1/
 env4/
+research/out/
+
+# Build artifacts
+out/
+
+# macOS Finder
+.DS_Store

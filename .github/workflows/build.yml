@@ -1,0 +1,40 @@
+name: build images
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [cb1, cm5]
+    container:
+      image: debian:trixie
+      options: --privileged
+    steps:
+      - run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates xz-utils
+      - uses: actions/checkout@v4
+      - run: bash build/in-container.sh ${{ matrix.board }}
+      - name: compress
+        run: |
+          rm -rf /tmp/work   # 14 GB runner disk; rootfs is dead weight past this point
+          cd out
+          xz -T0 -6 kos-${{ matrix.board }}-*.img
+          sha256sum kos-${{ matrix.board }}-*.img.xz > kos-${{ matrix.board }}.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kos-${{ matrix.board }}
+          path: out/kos-${{ matrix.board }}-*.img.xz
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            out/kos-${{ matrix.board }}-*.img.xz
+            out/kos-${{ matrix.board }}.sha256

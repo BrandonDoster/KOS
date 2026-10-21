@@ -1,0 +1,15 @@
+// Moonraker [machine] provider: systemd_dbus + PackageKit updates (Moonraker scripts/set-policykit-rules.sh, simplified:
+// on an appliance the klipper user already has sudo, so the moonraker-admin group check buys nothing).
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.freedesktop.systemd1.manage-units" ||
+         action.id == "org.freedesktop.login1.power-off" ||
+         action.id == "org.freedesktop.login1.power-off-multiple-sessions" ||
+         action.id == "org.freedesktop.login1.reboot" ||
+         action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+         action.id == "org.freedesktop.login1.halt" ||
+         action.id == "org.freedesktop.login1.halt-multiple-sessions" ||
+         action.id.startsWith("org.freedesktop.packagekit.")) &&
+        subject.user == "klipper") {
+        return polkit.Result.YES;
+    }
+});

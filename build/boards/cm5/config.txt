@@ -1,0 +1,30 @@
+# KOS boot firmware config for CM5/CM4. User settings live in kos.conf on the KOS partition.
+# Reference: rpi-image-gen templates/rpi/boot-firmware/config.txt
+arm_64bit=1
+auto_initramfs=1
+disable_fw_kms_setup=1
+disable_overscan=1
+arm_boost=1
+enable_uart=1
+dtparam=audio=off
+max_framebuffers=2
+# display=none (PLAN §16.2): no KMS overlay; kos-config uncomments this when kos.conf says display=hdmi.
+#dtoverlay=vc4-kms-v3d
+
+[cm4]
+otg_mode=1
+
+[cm5]
+dtoverlay=dwc2,dr_mode=host
+# Managed by kos-config from kos.conf (serial_console); changes apply on the next boot. docs/cm5-on-manta.md
+dtparam=uart0_console
+
+# CM5 on a CM4-style carrier (BTT Manta and every current Klipper board), from the first boot. Board types from the
+# revision code: 0x18 = CM5 (eMMC), 0x1a = CM5 Lite; the wrong tree breaks storage. kos.conf carrier_dt=off comments
+# these out (next boot) for Raspberry Pi's own CM5 IO board.
+[board-type=0x18]
+device_tree=bcm2712-rpi-cm5-cm4io.dtb
+[board-type=0x1a]
+device_tree=bcm2712-rpi-cm5l-cm4io.dtb
+
+[all]

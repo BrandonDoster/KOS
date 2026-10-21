@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""Match [mcu] sections in printer.cfg and the files it includes to the boards actually attached (PLAN §8).
+
+Runs before klipper.service. Only a *stale* value is rewritten (a by-id path that does not exist, or, on the
+boot that imported a config, a canbus_uuid that did not answer), and only when exactly one unused candidate of the same kind exists or
+kos.conf pins it. Anything ambiguous is reported in MCU-DISCOVERY.txt, never guessed.
+
+Usage: kos-mcu-discover [--dry-run]     Self-test: kos-mcu-discover --test
+"""
+import glob, os, re, subprocess, sys, time
+
+HOME = os.environ.get("KOS_HOME", "/home/klipper")
+CONF = os.environ.get("KOS_CONF", "/config/kos.conf")
+BY_ID = "/dev/serial/by-id"
+SECTION = re.compile(r"^\[mcu(?:\s+[^\]]+)?\]\s*$")
+INCLUDE = re.compile(r"^\[include\s+([^\]]+)\]")
+IMPORTED = "/run/kos-imported"   # kos-config: a config was imported this boot
+KEY = re.compile(r"^(?P<k>serial|canbus_uuid)\s*[:=]\s*(?P<v>\S*)(?P<rest>.*)$")
+
+
+def read_conf(path=CONF):
+    out = {}
+    try:
+        for line in open(path):
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            v = v.split(" #")[0].strip().strip("\"'")
+            out[k.strip()] = v
+    except OSError:
+        pass
+    return out
+
+
+def find_serials():
+    return sorted(p for p in glob.glob(BY_ID + "/usb-Klipper_*") + glob.glob(BY_ID + "/usb-katapult_*")
+                  if "-if00" in p)
+
+
+def find_can_uuids(iface="can0"):
+    py = f"{HOME}/klippy-env/bin/python"
+    q = f"{HOME}/klipper/scripts/canbus_query.py"
+    if not (os.path.exists(py) and os.path.exists(q) and os.path.isdir(f"/sys/class/net/{iface}")):
+        return []
+    try:
+        out = subprocess.run([py, q, iface], capture_output=True, text=True, timeout=15).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    return sorted(set(re.findall(r"canbus_uuid=([0-9a-f]{12})", out)))
+
+
+def refs(text):
+    """serial/canbus_uuid values referenced by [mcu*] sections in text."""
+    used = set(); in_mcu = False
+    for ln in text.splitlines():
+        s = ln.strip()
+        if s.startswith("["):
+            in_mcu = bool(SECTION.match(s))
+            continue
+        m = KEY.match(s) if in_mcu else None
+        if m:
+            used.add(m["v"])
+    return used
+
+
+def loaded_files(cfgdir, main="printer.cfg"):
+    """The files Klipper actually reads: printer.cfg plus its [include] globs, recursively, relative to each file."""
+    seen = []; todo = [os.path.join(cfgdir, main)]
+    while todo:
+        path = todo.pop(0)
+        if path in seen or not os.path.isfile(path):
+            continue
+        seen.append(path)
+        for ln in open(path):
+            m = INCLUDE.match(ln)
+            if m:
+                todo += sorted(glob.glob(os.path.join(os.path.dirname(path), m[1].strip())))
+    return seen
+
+
+def rewrite(text, serials, uuids, pins, used=()):
+    """Return (new_text, report_lines). Pure: no I/O. used: values referenced in the other config files.
+    uuids=None means CAN was not checked: a node Klipper already assigned stays silent, so absent is not stale."""
+    used = refs(text) | set(used)
+    lines = text.splitlines(keepends=True)
+    free_s = [p for p in serials if p not in used]
+    free_u = [u for u in uuids or [] if u not in used]
+    report = []; out = []; in_mcu = False; name = ""
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith("["):
+            in_mcu = bool(SECTION.match(s)); name = s
+            out.append(ln); continue
+        m = KEY.match(s) if in_mcu else None
+        if not m:
+            out.append(ln); continue
+        k, v = m["k"], m["v"]
+        stale = (k == "serial" and v.startswith(BY_ID) and v not in serials) or \
+                (k == "canbus_uuid" and uuids is not None and v not in uuids)
+        if not stale:
+            out.append(ln); continue
+        free = free_s if k == "serial" else free_u
+        pin = pins.get("main_mcu_serial" if k == "serial" else "toolhead_uuid", "")
+        if pin and pin in free:
+            new = pin
+        elif len(free) == 1:
+            new = free[0]
+        else:
+            report.append(f"{name} {k}: {v} not found; candidates: {free or 'none'}")
+            out.append(ln); continue
+        free.remove(new)
+        indent = ln[:len(ln) - len(ln.lstrip())]
+        out.append(f"{indent}{k}: {new}{m['rest']}\n")
+        report.append(f"{name} {k}: {v} -> {new}")
+    return "".join(out), report
+
+
+def main(argv):
+    dry = "--dry-run" in argv
+    cfgdir = f"{HOME}/printer_data/config"
+    for _ in range(30):  # USB enumeration and can0 can trail boot by a few seconds
+        if find_serials() or os.path.isdir("/sys/class/net/can0"):
+            break
+        time.sleep(0.5)
+    serials = find_serials()
+    # CAN only right after an import: on a warm reboot the nodes keep the id Klipper gave them and do not answer.
+    uuids = find_can_uuids() if os.path.exists(IMPORTED) else None
+    pins = read_conf()
+    report = [f"# kos-mcu-discover {time.strftime('%Y-%m-%dT%H:%M:%S')}",
+              f"serial: {serials or 'none'}",
+              f"canbus: {uuids or 'none'}" if uuids is not None else "canbus: not checked (no config imported this boot)"]
+    changed = False
+    texts = {p: open(p).read() for p in loaded_files(cfgdir)}
+    claimed = set()   # devices referenced or assigned anywhere, so two files never take the same board
+    for t in texts.values():
+        claimed |= refs(t)
+    for path, text in texts.items():
+        new, rep = rewrite(text, serials, uuids, pins, claimed)
+        claimed |= refs(new)
+        report += [f"{os.path.relpath(path, cfgdir)}: {r}" for r in rep]
+        if new != text and not dry:
+            open(path + ".orig", "w").write(text)   # ponytail: single backup, overwritten each rewrite
+            open(path, "w").write(new)
+            changed = True
+    for dest in (f"{cfgdir}/MCU-DISCOVERY.txt", "/config/MCU-DISCOVERY.txt"):
+        try:
+            open(dest, "w").write("\n".join(report) + "\n")
+        except OSError:
+            pass
+    print("\n".join(report))
+    return 0 if changed or not any("not found" in r for r in report) else 1
+
+
+def test():
+    cfg = "[mcu]\nserial: /dev/serial/by-id/usb-Klipper_stm32h723xx_OLD-if00\nrestart_method: command\n\n" \
+          "[mcu EBB]\ncanbus_uuid: aaaaaaaaaaaa\n\n[mcu host]\nserial: /tmp/klipper_host_mcu\n\n[stepper_x]\nserial: junk\n"
+    new_serial = "/dev/serial/by-id/usb-Klipper_stm32h723xx_NEW-if00"
+    out, rep = rewrite(cfg, [new_serial], ["bbbbbbbbbbbb"], {})
+    assert f"serial: {new_serial}" in out and "canbus_uuid: bbbbbbbbbbbb" in out, out
+    assert "serial: /tmp/klipper_host_mcu" in out and "serial: junk" in out   # untouched: non-by-id, non-mcu section
+    assert len(rep) == 2
+    # already current: no-op
+    assert rewrite(out, [new_serial], ["bbbbbbbbbbbb"], {})[0] == out
+    # ambiguous: two candidates, nothing rewritten, reported
+    out2, rep2 = rewrite(cfg, [new_serial, new_serial + "x"], [], {})
+    assert out2 == cfg and any("candidates" in r for r in rep2)
+    # pinned resolves ambiguity
+    out3, _ = rewrite(cfg, [new_serial, new_serial + "x"], [], {"main_mcu_serial": new_serial + "x"})
+    assert new_serial + "x" in out3
+    # device missing, no candidate: untouched
+    assert rewrite(cfg, [], [], {})[0] == cfg
+    # CAN not checked (warm reboot): an absent uuid is not stale
+    assert rewrite(cfg, [new_serial], None, {})[0] == cfg.replace("stm32h723xx_OLD", "stm32h723xx_NEW")
+    # only printer.cfg and what it includes, globs relative to the including file
+    import tempfile
+    d = tempfile.mkdtemp()
+    for name, body in {"printer.cfg": "[include macros/*.cfg]\n# [include mmu/erb.cfg]\n", "macros/a.cfg": "[include ../b.cfg]\n",
+                       "b.cfg": "", "mmu/erb.cfg": "", "printer-20260910_022303.cfg": ""}.items():
+        os.makedirs(os.path.dirname(os.path.join(d, name)), exist_ok=True)
+        open(os.path.join(d, name), "w").write(body)
+    assert [os.path.relpath(p, d) for p in loaded_files(d)] == ["printer.cfg", "macros/a.cfg", "b.cfg"], loaded_files(d)
+    # candidate already referenced by another file: not free, nothing rewritten
+    assert rewrite(cfg, [new_serial], ["bbbbbbbbbbbb"], {}, {new_serial, "bbbbbbbbbbbb"})[0] == cfg
+    print("ok")
+
+
+if __name__ == "__main__":
+    sys.exit(test() if "--test" in sys.argv else main(sys.argv[1:]))

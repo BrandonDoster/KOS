@@ -1,0 +1,21 @@
+[Unit]
+Description=Klipper 3D Printer Firmware
+Documentation=https://www.klipper3d.org/
+After=network.target kos-config.service kos-mcu-discover.service
+Wants=udev.target
+
+[Service]
+Type=simple
+User=klipper
+SupplementaryGroups=dialout tty
+# PLAN §10: core 3 is isolcpus'd on the kernel command line.
+CPUAffinity=3
+Nice=-18
+IOSchedulingPriority=2
+WorkingDirectory=/home/klipper/klipper
+ExecStart=/home/klipper/klippy-env/bin/python /home/klipper/klipper/klippy/klippy.py /home/klipper/printer_data/config/printer.cfg -I /home/klipper/printer_data/comms/klippy.serial -l /home/klipper/printer_data/logs/klippy.log -a /home/klipper/printer_data/comms/klippy.sock
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

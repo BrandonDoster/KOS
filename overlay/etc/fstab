@@ -1,0 +1,5 @@
+# PLAN §7 mount options. Labels, not device names, so the layout can differ per board.
+LABEL=KOS-ROOT  /                          ext4   noatime,nodiratime,commit=120,errors=remount-ro  0 1
+LABEL=KOS-DATA  /home/klipper/printer_data ext4   noatime,nodiratime,commit=120,nofail             0 2
+LABEL=KOS /config                    vfat   sync,umask=000,nofail                            0 0
+tmpfs           /var/log                   tmpfs  size=50M,mode=0755,nosuid,nodev                  0 0

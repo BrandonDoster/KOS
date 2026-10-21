@@ -1,0 +1,15 @@
+[Unit]
+Description=KOS: archive printed gcode files (PLAN §17)
+After=moonraker.service
+Wants=moonraker.service
+
+[Service]
+Type=simple
+User=klipper
+ExecStart=/usr/lib/kos/kos-archive
+Restart=always
+RestartSec=30
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""Archive successfully printed gcode files into Printed/YYYY/MM/ (PLAN §17).
+
+Polls Moonraker's job history over HTTP (stdlib only, no websocket dependency) and moves finished files
+with POST /server/files/move so Moonraker's metadata stays consistent. State = last seen job id.
+
+Usage: kos-archive [--once] [--backfill] [--dry-run]     Self-test: kos-archive --test
+"""
+import json, os, sys, time, urllib.error, urllib.parse, urllib.request
+
+CONF = os.environ.get("KOS_CONF", "/config/kos.conf")
+STATE = os.environ.get("KOS_ARCHIVE_STATE", os.path.expanduser("~/printer_data/.kos-archive.last"))
+URL = os.environ.get("MOONRAKER_URL", "http://127.0.0.1:7125")
+INTERVAL = 60
+
+
+def read_conf(path=CONF):
+    out = {}
+    try:
+        for line in open(path):
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.split(" #")[0].strip().strip("\"'")
+    except OSError:
+        pass
+    return out
+
+
+def api(method, url_path, **params):
+    data = json.dumps(params).encode() if method == "POST" else None
+    if method == "GET" and params:
+        url_path += "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(URL + url_path, data=data, method=method,
+                                 headers={"Content-Type": "application/json"} if data else {})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.load(r)["result"]
+
+
+def dest_for(filename, end_time, template):
+    t = time.localtime(end_time)
+    folder = template.format(year=f"{t.tm_year:04d}", month=f"{t.tm_mon:02d}", day=f"{t.tm_mday:02d}").strip("/")
+    return folder, os.path.basename(filename)
+
+
+def unique_name(existing, name):
+    """Collision policy (PLAN §17.4): numeric suffix, never overwrite."""
+    if name not in existing:
+        return name
+    stem, ext = os.path.splitext(name)
+    n = 2
+    while f"{stem}-{n}{ext}" in existing:
+        n += 1
+    return f"{stem}-{n}{ext}"
+
+
+def queued_files():
+    try:
+        return {j["filename"] for j in api("GET", "/server/job_queue/status")["queued_jobs"]}
+    except Exception:
+        return set()
+
+
+def archive_job(job, template, dry):
+    src = job["filename"]
+    folder, name = dest_for(src, job["end_time"], template)
+    if src.startswith(folder + "/"):
+        return None
+    try:
+        listing = api("GET", "/server/files/directory", path="gcodes/" + folder)
+        existing = {f["filename"] for f in listing["files"]}
+    except urllib.error.HTTPError:
+        existing = set()
+    dest = f"{folder}/{unique_name(existing, name)}"
+    if not dry:
+        api("POST", "/server/files/move", source="gcodes/" + src, dest="gcodes/" + dest)
+    return dest
+
+
+def run(once=False, backfill=False, dry=False):
+    template = read_conf().get("archive_path", "Printed/{year}/{month}/")
+    last = "" if backfill else (open(STATE).read().strip() if os.path.exists(STATE) else "")
+    while True:
+        try:
+            jobs = api("GET", "/server/history/list", limit=50 if not backfill else 10000, order="asc",
+                       **({"start": 0} if backfill else {}))["jobs"]
+            queued = queued_files()
+            for job in jobs:
+                if job["job_id"] <= last:
+                    continue
+                if job["status"] == "completed" and job.get("exists", True) and job["filename"] not in queued:
+                    try:
+                        dest = archive_job(job, template, dry)
+                        if dest:
+                            print(f"{job['filename']} -> {dest}", flush=True)
+                    except urllib.error.HTTPError as e:
+                        print(f"skip {job['filename']}: HTTP {e.code}", flush=True)
+                last = max(last, job["job_id"])
+            if not dry:
+                os.makedirs(os.path.dirname(STATE), exist_ok=True)
+                open(STATE, "w").write(last)
+        except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+            print(f"moonraker not ready: {e}", flush=True)
+        if once or backfill:
+            return
+        time.sleep(INTERVAL)
+
+
+def test():
+    import http.server, threading
+    global URL
+    calls = []
+    hist = [{"job_id": "000001", "filename": "a.gcode", "status": "completed", "end_time": 1756000000, "exists": True},
+            {"job_id": "000002", "filename": "b.gcode", "status": "cancelled", "end_time": 1756000000, "exists": True},
+            {"job_id": "000003", "filename": "a.gcode", "status": "completed", "end_time": 1756000000, "exists": True},
+            {"job_id": "000004", "filename": "Printed/2025/08/z.gcode", "status": "completed", "end_time": 1756000000}]
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a): pass
+        def reply(self, obj):
+            body = json.dumps({"result": obj}).encode()
+            self.send_response(200); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+        def do_GET(self):
+            p = urllib.parse.urlparse(self.path)
+            if p.path == "/server/history/list": self.reply({"jobs": hist})
+            elif p.path == "/server/job_queue/status": self.reply({"queued_jobs": []})
+            elif p.path == "/server/files/directory": self.reply({"files": [{"filename": "a.gcode"}]})
+        def do_POST(self):
+            calls.append(json.loads(self.rfile.read(int(self.headers["Content-Length"])))); self.reply({})
+
+    srv = http.server.HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    URL = f"http://127.0.0.1:{srv.server_port}"
+    os.environ["TZ"] = "UTC"; time.tzset()
+    run(once=True, backfill=True, dry=False)
+    dests = [c["dest"] for c in calls]
+    assert dests == ["gcodes/Printed/2025/08/a-2.gcode", "gcodes/Printed/2025/08/a-2.gcode"], dests
+    assert all(c["source"] == "gcodes/a.gcode" for c in calls)   # cancelled b.gcode and already-archived z.gcode skipped
+    assert unique_name({"x.gcode", "x-2.gcode"}, "x.gcode") == "x-3.gcode"
+    assert open(STATE).read() == "000004"
+    print("ok")
+
+
+if __name__ == "__main__":
+    a = sys.argv[1:]
+    if "--test" in a:
+        STATE = "/tmp/kos-archive-test.last"; sys.exit(test())
+    run(once="--once" in a, backfill="--backfill" in a, dry="--dry-run" in a)

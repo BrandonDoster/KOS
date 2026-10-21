@@ -1,0 +1,11 @@
+[Unit]
+Description=KOS: IRQ affinity
+After=systemd-udev-settle.service
+Before=klipper.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/kos/kos-tune
+
+[Install]
+WantedBy=multi-user.target

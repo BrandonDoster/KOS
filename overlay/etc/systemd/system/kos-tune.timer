@@ -1,0 +1,10 @@
+[Unit]
+Description=KOS: IRQ affinity again once the network is up
+# end0 (dwmac) only requests its IRQ when the link is opened, after kos-tune.service has already run.
+
+[Timer]
+OnBootSec=30s
+Unit=kos-tune.service
+
+[Install]
+WantedBy=timers.target

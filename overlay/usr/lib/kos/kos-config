@@ -1,0 +1,124 @@
+#!/bin/bash
+# Applies /config/kos.conf. Runs every boot before the printer stack; every step is idempotent.
+# First-boot-only steps are gated on $KOS_STATE/firstboot.done.
+set -u
+. /usr/lib/kos/lib.sh
+mkdir -p "$KOS_STATE"
+PD=$KOS_HOME/printer_data
+
+# --- first boot only: grow the data partition, fresh SSH host keys ---
+if [ ! -e "$KOS_STATE/firstboot.done" ]; then
+    dev=$(findmnt -no SOURCE "$PD" 2>/dev/null || true)
+    if [ -n "$dev" ]; then
+        disk=$(lsblk -no PKNAME "$dev"); num=$(cat "/sys/class/block/$(basename "$dev")/partition")
+        growpart "/dev/$disk" "$num" && resize2fs "$dev"
+    fi
+    rm -f /etc/ssh/ssh_host_*; ssh-keygen -A
+    touch "$KOS_STATE/firstboot.done"
+fi
+
+# --- seed printer_data from the config partition (FlyOS flyos-firstrun:3-21, rename instead of delete) ---
+mkdir -p "$PD"/{config,logs,gcodes,comms,database,systemd}
+# A bare config/ folder (copied without its printer_data parent) means the same thing.
+if [ -d /config/config ] && [ ! -d /config/printer_data ]; then
+    mkdir /config/printer_data && mv /config/config /config/printer_data/config
+fi
+if [ -d /config/printer_data ]; then
+    log "importing /config/printer_data"
+    cp -a /config/printer_data/. "$PD"/
+    mv /config/printer_data "/config/printer_data.imported.$(date +%s)"
+    imported=1
+fi
+if [ -f /config/printer.cfg ]; then
+    log "importing /config/printer.cfg"
+    cp /config/printer.cfg "$PD/config/printer.cfg"
+    mv -f /config/printer.cfg /config/printer.cfg.imported
+    imported=1
+fi
+# Configs from another install name its home (/home/pi/..., /home/<you>/...); here everything lives in /home/klipper.
+if [ -n "${imported:-}" ]; then
+    touch /run/kos-imported   # tells kos-mcu-discover the CAN ids may be from another machine
+    find "$PD" -name '._*' -type f -delete   # macOS AppleDouble metadata from copying onto FAT; never real config
+    find "$PD/config" -type f \( -name '*.cfg' -o -name '*.conf' \) -exec grep -lP '/home/(?!klipper/)[\w.-]+/' {} + 2>/dev/null |
+    while read -r f; do
+        perl -pi -e 's#/home/(?!klipper/)[\w.-]+/#/home/klipper/#g' "$f" && log "home paths -> /home/klipper in ${f#$PD/}"
+    done
+fi
+# Mainsail's client macros, the way its installer provides them: a symlink into the mainsail-config checkout.
+[ -e "$PD/config/mainsail.cfg" ] || ln -sfn /home/klipper/mainsail-config/mainsail.cfg "$PD/config/mainsail.cfg"
+[ -f "$PD/config/moonraker.conf" ] || cp /usr/lib/kos/moonraker.conf "$PD/config/moonraker.conf"
+[ -f "$PD/config/printer.cfg" ] || cp /usr/lib/kos/printer.cfg "$PD/config/printer.cfg"
+chown -R klipper:klipper "$PD"
+
+# --- hostname ---
+h=$(cfg hostname kos)
+if [ "$(cat /etc/hostname 2>/dev/null)" != "$h" ]; then
+    echo "$h" > /etc/hostname; hostname "$h"
+    log "hostname set to $h"
+fi
+# Every boot, not only on change: the image already ships /etc/hostname=kos, so a default-named box never "changes".
+if ! grep -qx "127\.0\.1\.1 $h" /etc/hosts; then
+    sed -i '/^127\.0\.1\.1/d' /etc/hosts; echo "127.0.1.1 $h" >> /etc/hosts
+fi
+
+# --- timezone ---
+tz=$(cfg timezone Etc/UTC)
+if [ -f "/usr/share/zoneinfo/$tz" ] && [ "$(readlink /etc/localtime)" != "/usr/share/zoneinfo/$tz" ]; then
+    ln -sf "/usr/share/zoneinfo/$tz" /etc/localtime; echo "$tz" > /etc/timezone
+fi
+
+# --- credentials (applied every boot so a later edit takes effect) ---
+pw=$(cfg password)
+[ -n "$pw" ] && echo "klipper:$pw" | chpasswd
+key=$(cfg ssh_key)
+if [ -n "$key" ]; then
+    install -d -m 0700 -o klipper -g klipper "$KOS_HOME/.ssh"
+    grep -qxF "$key" "$KOS_HOME/.ssh/authorized_keys" 2>/dev/null || echo "$key" >> "$KOS_HOME/.ssh/authorized_keys"
+    chown klipper:klipper "$KOS_HOME/.ssh/authorized_keys"; chmod 0600 "$KOS_HOME/.ssh/authorized_keys"
+fi
+
+# --- Wi-Fi via NetworkManager (FlyOS flyos-config:159-202, without sourcing the file) ---
+ssid=$(cfg wifi_ssid)
+if [ -n "$ssid" ]; then
+    country=$(cfg wifi_country); [ -n "$country" ] && iw reg set "$country" 2>/dev/null
+    pass=$(cfg wifi_pass)
+    if nmcli -t -f NAME con show | grep -qxF kos-wifi; then
+        nmcli con modify kos-wifi 802-11-wireless.ssid "$ssid"
+    else
+        nmcli con add con-name kos-wifi type wifi ifname '*' ssid "$ssid" autoconnect yes
+    fi
+    if [ -n "$pass" ]; then
+        nmcli con modify kos-wifi wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$pass"
+    else
+        nmcli con modify kos-wifi wifi-sec.key-mgmt '' wifi-sec.psk ''
+    fi
+    nmcli con modify kos-wifi connection.autoconnect-priority -999 wifi.powersave 2
+    nmcli con up kos-wifi >/dev/null 2>&1 || log "wifi: not connected yet (NetworkManager will retry)"
+fi
+
+# --- CAN bitrate (FlyOS flyos-config:78-93) ---
+br=$(cfg can_bitrate 1000000)
+if ! grep -q "^BitRate=$br$" /etc/systemd/network/99-can.network; then
+    sed -i "s/^BitRate=.*/BitRate=$br/" /etc/systemd/network/99-can.network
+    networkctl reload; networkctl reconfigure can0 2>/dev/null || true
+    log "CAN bitrate set to $br"
+fi
+
+# --- display (PLAN §16.2): image ships headless; display=hdmi lifts the blacklist and the video= arg (next boot) ---
+if [ "$(cfg display none)" = hdmi ]; then
+    rm -f /etc/modprobe.d/kos-display.conf
+    [ -f /boot/armbianEnv.txt ] && sed -i 's/ *video=HDMI-A-1:d//' /boot/armbianEnv.txt
+    [ -f /boot/firmware/cmdline.txt ] && sed -i 's/ *video=HDMI-A-1:d//' /boot/firmware/cmdline.txt
+    [ -f /boot/firmware/config.txt ] && sed -i 's/^#dtoverlay=vc4-kms-v3d/dtoverlay=vc4-kms-v3d/' /boot/firmware/config.txt
+fi
+
+# --- CM5 on a CM4-style carrier (BTT Manta and similar; docs/cm5-on-manta.md). Edits apply on the next boot ---
+/usr/lib/kos/kos-cm5-carrier
+
+# --- optional services ---
+if [ "$(cfg archive_printed on)" = on ]; then systemctl enable --now --no-block kos-archive.service >/dev/null 2>&1
+else systemctl disable --now --no-block kos-archive.service >/dev/null 2>&1; fi
+# Klipper host MCU only when a config talks to it ([mcu host] serial: /tmp/klipper_host_mcu).
+if grep -rqs --include='*.cfg' klipper_host_mcu "$PD/config"; then systemctl enable --now --no-block klipper-mcu.service >/dev/null 2>&1
+else systemctl disable --now --no-block klipper-mcu.service >/dev/null 2>&1; fi
+exit 0

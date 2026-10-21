@@ -1,0 +1,11 @@
+#!/bin/sh
+# IRQ steering off the isolated Klippy core (PLAN §10/§16.3, FlyOS flyos-init-hard:27-32), matched by name never by number.
+# Governor comes from the kernel command line (cpufreq.default_governor=performance), nothing to do here.
+# ponytail: one mask for all peripheral IRQs; split per-device only if a measurement shows USB vs MMC contention.
+mask=6   # cpus 1-2
+for name in sunxi-mmc ehci_hcd ohci_hcd musb-hdrc xhci-hcd dwc3 eth0 end0 ethernet rp1 xhci_hcd mmc; do
+    for irq in $(awk -v n="$name" '$0 ~ n {sub(":","",$1); print $1}' /proc/interrupts); do
+        [ -w "/proc/irq/$irq/smp_affinity" ] && echo "$mask" > "/proc/irq/$irq/smp_affinity" 2>/dev/null
+    done
+done
+exit 0

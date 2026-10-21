@@ -1,0 +1,8 @@
+[Unit]
+Description=KOS: empty recycle bin (older than 30 days, or oldest first when a disk is under 10% free)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/kos/kos-trash-purge
+Nice=19
+IOSchedulingClass=idle

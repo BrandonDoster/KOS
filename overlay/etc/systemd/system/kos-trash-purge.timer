@@ -1,0 +1,9 @@
+[Unit]
+Description=KOS: hourly recycle bin purge
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
