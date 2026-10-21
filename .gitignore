@@ -6,7 +6,7 @@ rootfs/
 boot0/
 boot1/
 env4/
-research/out/
+research/
 
 # Build artifacts
 out/
