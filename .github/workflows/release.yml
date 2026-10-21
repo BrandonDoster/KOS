@@ -69,3 +69,4 @@ jobs:
       ref: ${{ needs.find.outputs.sha }}
       tag: ${{ github.ref_name }}
       prerelease: false
+# (KOS: GitHub registers a workflow file only when a push changes it.)

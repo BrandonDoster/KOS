@@ -27,3 +27,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --squash "$PR_URL"
+# (KOS: GitHub registers a workflow file only when a push changes it.)

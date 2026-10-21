@@ -98,3 +98,4 @@ jobs:
               set -- --notes "Built from $REF."
           fi
           gh release create "$TAG" out/* --target "$REF" --title "$TAG" "$@"
+# (KOS: GitHub registers a workflow file only when a push changes it.)
