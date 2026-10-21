@@ -1,0 +1,51 @@
+{
+ "boot_systemd": "Startup finished in 2.203s (kernel) + 7.768s (userspace) = 9.972s",
+ "cmdline": "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe cgroup_disable=memory numa_policy=interleave nvme.max_host_mem_size_mb=32 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=8 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=2C:CF:67:XX:XX:XX vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 console=tty1 root=LABEL=KOS-ROOT rootfstype=ext4 fsck.repair=yes rootwait consoleblank=0 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d",
+ "moonraker_get_directory_s": {
+  "first": 0.358725,
+  "median_warm": 0.3540775,
+  "all": [
+   0.358725,
+   0.359726,
+   0.348301,
+   0.358784,
+   0.349371
+  ]
+ },
+ "governor": "performance",
+ "isolated": 3,
+ "kernel": "6.18.50+rpt-rpi-2712",
+ "klipper": "v0.13.0-809-gc63b2951",
+ "klippy_cpus": 3,
+ "klippy_ready_s": null,
+ "klippy_state": "error",
+ "label": "kos",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 2,
+  "p999_us": 3,
+  "max_us": 7
+ },
+ "lat_load": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 13,
+  "p999_us": 30,
+  "max_us": 206
+ },
+ "mem_available_mb": 3752,
+ "mem_used_mb": 296,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 0,
+ "os": "Debian GNU/Linux 13 (trixie)",
+ "packages": 352,
+ "processes": 144,
+ "rootfs_used_mb": 1562,
+ "sd_write_mb_per_h_idle": 0.5,
+ "sd_write_mb_per_h_since_boot": 10884.8,
+ "services_running": 18,
+ "_corrections": [
+  "moonraker_get_directory_s and moonraker_loop_blocked are INVALID: the script waited only 30 s after indexing, so metadata extraction (~150 s for 1,234 files on CM5) was still running when the listing was timed, and the fixture was deleted mid-extraction. Fixed in bench_on_device.sh 2026-10-19 (waits for metadata on every file)."
+ ]
+}

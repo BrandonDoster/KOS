@@ -1,0 +1,6 @@
+kernel args: isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d
+cpufrequtils: GOVERNOR=performance
+Created symlink '/etc/systemd/system/timers.target.wants/kos-tune.timer' → '/etc/systemd/system/kos-tune.timer'.
+done; cold-boot before benchmarking
+1
+enabled

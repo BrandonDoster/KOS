@@ -1,0 +1,6 @@
+ENABLE=false
+MIN_SPEED=480000
+MAX_SPEED=1512000
+GOVERNOR=ondemand
+not-found
+enabled

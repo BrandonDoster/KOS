@@ -1,0 +1,4 @@
+kernel args: isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d
+cpufrequtils: GOVERNOR=performance
+Created symlink '/etc/systemd/system/multi-user.target.wants/kos-tune.service' → '/etc/systemd/system/kos-tune.service'.
+done; cold-boot before benchmarking

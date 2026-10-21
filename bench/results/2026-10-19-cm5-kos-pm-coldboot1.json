@@ -1,0 +1,58 @@
+{
+ "boot_systemd": "Startup finished in 3.457s (kernel) + 7.337s (userspace) = 10.794s",
+ "cmdline": "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe cgroup_disable=memory numa_policy=interleave nvme.max_host_mem_size_mb=32 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=8 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=2C:CF:67:XX:XX:XX vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 console=tty1 root=LABEL=KOS-ROOT rootfstype=ext4 fsck.repair=yes rootwait consoleblank=0 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d",
+ "moonraker_get_directory_s": {
+  "first": 0.349152,
+  "median_warm": 0.35170250000000003,
+  "all": [
+   0.349152,
+   0.354144,
+   0.363758,
+   0.349197,
+   0.349261
+  ]
+ },
+ "footprint_clean": false,
+ "governor": "performance",
+ "hw_cpu_max_mhz": 2400,
+ "hw_model": "Raspberry Pi Compute Module 5 Lite Rev 1.0",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; image kos-cm5-20261019 pm",
+ "hw_ram_mb": 4049,
+ "hw_sd": "SD32G manfid=0x000027 oemid=0x5048 date=08/2020 28 GiB",
+ "isolated": 3,
+ "kernel": "6.18.50+rpt-rpi-2712",
+ "klipper": "v0.13.0-809-gc63b2951",
+ "klippy_cpus": 3,
+ "klippy_ready_s": 16.8,
+ "klippy_state": "ready",
+ "label": "kos",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 3,
+  "p999_us": 4,
+  "max_us": 9
+ },
+ "lat_load": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 15,
+  "p999_us": 33,
+  "max_us": 68
+ },
+ "mainsail": "v2.19.0",
+ "mem_available_mb": 3723,
+ "mem_used_mb": 325,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 0,
+ "os": "Debian GNU/Linux 13 (trixie)",
+ "packages": 352,
+ "processes": 162,
+ "rootfs_used_mb": 1566,
+ "sd_write_mb_per_h_idle": 2.9,
+ "sd_write_mb_per_h_since_boot": 87.7,
+ "services_running": 20,
+ "_corrections": [
+  "moonraker_get_directory_s and moonraker_loop_blocked are INVALID: the script waited only 30 s after indexing, so metadata extraction (~150 s for 1,234 files on CM5) was still running when the listing was timed, and the fixture was deleted mid-extraction. Fixed in bench_on_device.sh 2026-10-19 (waits for metadata on every file)."
+ ]
+}

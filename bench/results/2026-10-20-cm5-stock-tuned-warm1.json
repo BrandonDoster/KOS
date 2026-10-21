@@ -1,0 +1,57 @@
+{
+ "boot_systemd": "Startup finished in 2.280s (kernel) + 8.915s (userspace) = 11.196s",
+ "cmdline": "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe cgroup_disable=memory numa_policy=interleave nvme.max_host_mem_size_mb=32  numa=fake=8 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=2C:CF:67:XX:XX:XX vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA10,115200 console=tty1 root=PARTUUID=c3074f03-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=US ds=nocloud;i=rpi-imager-1792441998256 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d",
+ "moonraker_get_directory_s": {
+  "first": 0.396431,
+  "median_warm": 0.3961665,
+  "all": [
+   0.396431,
+   0.394196,
+   0.397378,
+   0.39763,
+   0.394955
+  ]
+ },
+ "footprint_clean": false,
+ "governor": "performance",
+ "hw_cpu_max_mhz": 2400,
+ "hw_model": "Raspberry Pi Compute Module 5 Lite Rev 1.0",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M, MCU fw v0.13.0-809); LDO Nitehawk 36 USB; [mcu host]; wired; Sindri; warm-reboot repeat 1 of 3",
+ "hw_ram_mb": 4049,
+ "hw_sd": "mmcblk0 SD32G manfid=0x000027 oemid=0x5048 date=08/2020 28 GiB",
+ "isolated": 3,
+ "kernel": "6.18.50+rpt-rpi-2712",
+ "klipper": "v0.13.0-809-gc63b29510",
+ "klippy_cpus": 3,
+ "klippy_ready_s": 14.6,
+ "klippy_state": "ready",
+ "label": "stock-tuned",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 3,
+  "p999_us": 4,
+  "max_us": 9
+ },
+ "lat_load": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 14,
+  "p999_us": 32,
+  "max_us": 86
+ },
+ "mainsail": "v2.19.0",
+ "mem_available_mb": 3701,
+ "mem_used_mb": 348,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 0,
+ "moonraker_metadata_files": 1234,
+ "moonraker_metadata_s": 154,
+ "os": "Debian GNU/Linux 13 (trixie)",
+ "packages": 713,
+ "processes": 165,
+ "rootfs_used_mb": 9174,
+ "sd_write_mb_per_h_idle": 0.2,
+ "sd_write_mb_per_h_since_boot": 18.8,
+ "services_running": 20
+}

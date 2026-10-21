@@ -1,0 +1,220 @@
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ sudo apt-get -o DPkg::Lock::Timeout=600 update
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Hit:2 http://deb.debian.org/debian trixie-updates InRelease
+Hit:3 http://deb.debian.org/debian-security trixie-security InRelease
+Get:4 http://deb.debian.org/debian trixie/main arm64 Components [4,620 kB]
+Hit:5 http://archive.raspberrypi.com/debian trixie InRelease
+Get:6 http://deb.debian.org/debian trixie/contrib arm64 Components [37.0 kB]
+Get:7 http://deb.debian.org/debian trixie/non-free arm64 Components [1,864 B]
+Get:8 http://deb.debian.org/debian trixie/non-free-firmware arm64 Components [24.2 kB]
+Fetched 4,683 kB in 2s (2,964 kB/s)
+Reading package lists...
++ sudo apt-get -o DPkg::Lock::Timeout=600 -y full-upgrade
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ sudo apt-get -o DPkg::Lock::Timeout=600 install -y git unzip curl
+Reading package lists...
+Building dependency tree...
+Reading state information...
+git is already the newest version (1:2.47.3-0+deb13u1).
+unzip is already the newest version (6.0-29+deb13u1).
+curl is already the newest version (8.14.1-2+deb13u7).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ cd /home/brandon
++ '[' -d klipper ']'
++ sudo apt-get -o DPkg::Lock::Timeout=600 install -y virtualenv python3-dev libffi-dev build-essential libncurses-dev libusb-dev avrdude gcc-avr binutils-avr avr-libc stm32flash dfu-util libnewlib-arm-none-eabi gcc-arm-none-eabi binutils-arm-none-eabi libusb-1.0-0 pkg-config
+Reading package lists...
+Building dependency tree...
+Reading state information...
+virtualenv is already the newest version (20.31.2+ds-1+deb13u1).
+python3-dev is already the newest version (3.13.5-1).
+libffi-dev is already the newest version (3.4.8-2).
+build-essential is already the newest version (12.12).
+libncurses-dev is already the newest version (6.5+20250216-2).
+libusb-dev is already the newest version (2:0.1.12-35+b1).
+avrdude is already the newest version (7.1+dfsg-3+b3).
+gcc-avr is already the newest version (1:14.2.0-2).
+binutils-avr is already the newest version (2.43.50.20250108-1).
+avr-libc is already the newest version (1:2.2.1-1).
+stm32flash is already the newest version (0.7-1+b1).
+dfu-util is already the newest version (0.11-3).
+libnewlib-arm-none-eabi is already the newest version (4.5.0.20241231-1).
+gcc-arm-none-eabi is already the newest version (15:14.2.rel1-1).
+binutils-arm-none-eabi is already the newest version (2.44-3+23+b2).
+libusb-1.0-0 is already the newest version (2:1.0.28-1).
+pkg-config is already the newest version (1.8.1-4).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ '[' -d klippy-env ']'
++ klippy-env/bin/pip install -r klipper/scripts/klippy-requirements.txt
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Ignoring greenlet: markers 'python_version < "3.12"' don't match your environment
+Ignoring cffi: markers 'python_version < "3.12"' don't match your environment
+Requirement already satisfied: greenlet==3.3.2 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 8)) (3.3.2)
+Requirement already satisfied: cffi==2.1.1 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 11)) (2.1.1)
+Requirement already satisfied: Jinja2==2.11.3 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 13)) (2.11.3)
+Requirement already satisfied: markupsafe==1.1.1 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 14)) (1.1.1)
+Requirement already satisfied: pyserial==3.4 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 16)) (3.4)
+Requirement already satisfied: python-can==3.3.4 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 18)) (3.3.4)
+Requirement already satisfied: setuptools==78.1.1 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 19)) (78.1.1)
+Requirement already satisfied: msgspec==0.19.0 in ./klippy-env/lib/python3.13/site-packages (from -r klipper/scripts/klippy-requirements.txt (line 21)) (0.19.0)
+Requirement already satisfied: pycparser in ./klippy-env/lib/python3.13/site-packages (from cffi==2.1.1->-r klipper/scripts/klippy-requirements.txt (line 11)) (3.11)
+Requirement already satisfied: aenum in ./klippy-env/lib/python3.13/site-packages (from python-can==3.3.4->-r klipper/scripts/klippy-requirements.txt (line 18)) (3.1.17)
+Requirement already satisfied: wrapt~=1.10 in ./klippy-env/lib/python3.13/site-packages (from python-can==3.3.4->-r klipper/scripts/klippy-requirements.txt (line 18)) (1.17.3)
++ mkdir -p printer_data/config printer_data/logs printer_data/comms printer_data/systemd printer_data/gcodes printer_data/database
++ echo 'KLIPPER_ARGS="/home/brandon/klipper/klippy/klippy.py /home/brandon/printer_data/config/printer.cfg -I /home/brandon/printer_data/comms/klippy.serial -l /home/brandon/printer_data/logs/klippy.log -a /home/brandon/printer_data/comms/klippy.sock"'
++ sudo tee /etc/systemd/system/klipper.service
++ sudo systemctl daemon-reload
++ sudo systemctl enable klipper
++ '[' -d moonraker ']'
++ ./moonraker/scripts/install-moonraker.sh
+Installing from Moonraker source...
+
+
+###### Installing Moonraker System Packages...
+Linux Distribution: debian 13
+Packages: python3-virtualenv python3-dev libopenjp2-7 libsodium-dev zlib1g-dev libjpeg-dev packagekit wireless-tools python3-libcamera curl build-essential
+
+
+###### Running apt-get update...
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Hit:2 http://deb.debian.org/debian trixie-updates InRelease
+Hit:3 http://deb.debian.org/debian-security trixie-security InRelease
+Hit:4 http://archive.raspberrypi.com/debian trixie InRelease
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+python3-virtualenv is already the newest version (20.31.2+ds-1+deb13u1).
+python3-dev is already the newest version (3.13.5-1).
+libopenjp2-7 is already the newest version (2.5.3-2.1~deb13u2).
+libsodium-dev is already the newest version (1.0.18-1+deb13u1).
+zlib1g-dev is already the newest version (1:1.3.dfsg+really1.3.1-1+b1).
+libjpeg-dev is already the newest version (1:2.1.5-4).
+packagekit is already the newest version (1.3.1-1+deb13u1).
+wireless-tools is already the newest version (30~pre9-18+b1).
+python3-libcamera is already the newest version (0.7.2+rpt20261009-1).
+curl is already the newest version (8.14.1-2+deb13u7).
+build-essential is already the newest version (12.12).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+
+###### Installing python virtual environment...
+Using pip install command '/home/brandon/moonraker-env/bin/pip install'...
+
+
+###### Installing Moonraker python dependencies...
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Looking in links: /home/brandon/moonraker/scripts/python_wheels
+Requirement already satisfied: tornado<=6.5.8,>=6.2.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 3)) (6.5.8)
+Requirement already satisfied: pyserial==3.4 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 4)) (3.4)
+Requirement already satisfied: pillow<=12.3.0,>=9.5.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 5)) (12.3.0)
+Requirement already satisfied: streaming-form-data<=2.1.0,>=1.11.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6)) (2.1.0)
+Requirement already satisfied: distro==1.9.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 7)) (1.9.0)
+Requirement already satisfied: inotify-simple==2.0.1 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 8)) (2.0.1)
+Requirement already satisfied: libnacl==2.1.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 9)) (2.1.0)
+Requirement already satisfied: paho-mqtt==2.1.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 10)) (2.1.0)
+Requirement already satisfied: zeroconf<=0.150.0,>=0.131.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 11)) (0.150.0)
+Requirement already satisfied: preprocess-cancellation==0.2.1 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 12)) (0.2.1)
+Requirement already satisfied: jinja2==3.1.6 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 13)) (3.1.6)
+Requirement already satisfied: dbus-fast<=5.0.22,>=2.21.3 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 14)) (5.0.22)
+Requirement already satisfied: apprise<=1.13.0,>=1.9.3 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (1.13.0)
+Requirement already satisfied: ldap3==2.9.1 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 16)) (2.9.1)
+Requirement already satisfied: python-periphery==2.4.1 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 17)) (2.4.1)
+Requirement already satisfied: importlib_metadata<=9.0.0,>=6.7.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 18)) (9.0.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from jinja2==3.1.6->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 13)) (3.0.4)
+Requirement already satisfied: pyasn1>=0.4.6 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from ldap3==2.9.1->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 16)) (0.6.4)
+Requirement already satisfied: smart-open>=7.0.5 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6)) (8.0.4)
+Requirement already satisfied: aiofiles>=23.2.1 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6)) (25.1.0)
+Requirement already satisfied: ifaddr>=0.1.7 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from zeroconf<=0.150.0,>=0.131.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 11)) (0.2.0)
+Requirement already satisfied: requests in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (2.34.2)
+Requirement already satisfied: requests-oauthlib in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (2.0.0)
+Requirement already satisfied: click>=5.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (8.5.0)
+Requirement already satisfied: markdown in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (3.11.2)
+Requirement already satisfied: PyYAML in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (6.0.3)
+Requirement already satisfied: certifi in /home/brandon/moonraker-env/lib/python3.13/site-packages (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (2026.10.18)
+Requirement already satisfied: zipp>=3.20 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from importlib_metadata<=9.0.0,>=6.7.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 18)) (4.1.1)
+Requirement already satisfied: wrapt in /home/brandon/moonraker-env/lib/python3.13/site-packages (from smart-open>=7.0.5->streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6)) (2.5.1)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (3.5.2)
+Requirement already satisfied: idna<4,>=2.5 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (3.20)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (2.8.0)
+Requirement already satisfied: oauthlib>=3.0.0 in /home/brandon/moonraker-env/lib/python3.13/site-packages (from requests-oauthlib->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15)) (4.0.0)
+
+
+###### Initializing Moonraker Data Path at /home/brandon/printer_data
+PolKit rules file found at /usr/share/polkit-1/rules.d/moonraker.rules
+
+
+###### Launching Moonraker API Server...
++ sudo apt-get -o DPkg::Lock::Timeout=600 install -y nginx
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  nginx-common
+Suggested packages:
+  fcgiwrap nginx-doc ssl-cert
+The following NEW packages will be installed:
+  nginx nginx-common
+0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+Need to get 683 kB of archives.
+After this operation, 1,955 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian-security trixie-security/main arm64 nginx-common all 1.26.3-3+deb13u9 [112 kB]
+Get:2 http://deb.debian.org/debian-security trixie-security/main arm64 nginx arm64 1.26.3-3+deb13u9 [572 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Preconfiguring packages ...
+Fetched 683 kB in 0s (16.2 MB/s)
+Selecting previously unselected package nginx-common.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 79712 files and directories currently installed.)
+Preparing to unpack .../nginx-common_1.26.3-3+deb13u9_all.deb ...
+Unpacking nginx-common (1.26.3-3+deb13u9) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../nginx_1.26.3-3+deb13u9_arm64.deb ...
+Unpacking nginx (1.26.3-3+deb13u9) ...
+Setting up nginx-common (1.26.3-3+deb13u9) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Created symlink '/etc/systemd/system/multi-user.target.wants/nginx.service' → '/usr/lib/systemd/system/nginx.service'.
+Setting up nginx (1.26.3-3+deb13u9) ...
+Upgrading binary: nginx.
+Processing triggers for man-db (2.13.1-1) ...
++ mkdir -p mainsail
++ curl -fsSL https://github.com/mainsail-crew/mainsail/releases/latest/download/mainsail.zip -o /tmp/mainsail.zip
++ unzip -oq /tmp/mainsail.zip -d mainsail
++ '[' -d mainsail-config ']'
++ git clone https://github.com/mainsail-crew/mainsail-config.git
+Cloning into 'mainsail-config'...
++ ln -sfn /home/brandon/mainsail-config/mainsail.cfg /home/brandon/printer_data/config/mainsail.cfg
++ chmod og+x /home/brandon
++ printf 'upstream apiserver {\n    ip_hash;\n    server 127.0.0.1:7125;\n}\n'
++ sudo tee /etc/nginx/conf.d/upstreams.conf
++ printf 'map $http_upgrade $connection_upgrade {\n    default upgrade;\n    %s close;\n}\n' ''\'''\'''
++ sudo tee /etc/nginx/conf.d/common_vars.conf
++ sudo tee /etc/nginx/sites-available/mainsail
++ sudo ln -sfn /etc/nginx/sites-available/mainsail /etc/nginx/sites-enabled/mainsail
++ sudo rm -f /etc/nginx/sites-enabled/default
++ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
++ sudo systemctl restart nginx
++ echo 'stock install done'
+stock install done

@@ -1,0 +1,114 @@
+{
+ "label": "stock-tuned",
+ "phase": 2,
+ "date": "2026-10-19",
+ "host": "Raspberry Pi Compute Module 5 Lite Rev 1.0, 4 GB, SD32G 32 GB SDHC",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; stock Raspberry Pi OS Lite trixie + stock_install.sh + stock_tune.sh",
+ "gcode": "bench/fixtures/flexible+railway+track+brio+short+long_PLA_1h25m.gcode",
+ "gcode_sha256": "dd546acdfec2f18aced3b03611a2d436ca8e78c58c254e8fb6e951604214d2d4",
+ "job": {
+  "status": "completed",
+  "start": "17:31:34",
+  "end": "18:55:49",
+  "print_min": 82.0,
+  "total_min": 84.3
+ },
+ "klippy_log": {
+  "print_section_lines": 66686,
+  "print_section_bytes": 7861805,
+  "stats_samples": 5052,
+  "duration_s": 5053.9,
+  "timer_too_close": 0,
+  "mcu_shutdowns": 0,
+  "print_stall": 0.0,
+  "sysload": {
+   "median": 0.03,
+   "p99": 0.31,
+   "max": 0.4
+  },
+  "klippy_cputime_s": 98.6,
+  "buffer_time_s": {
+   "median": 1.176,
+   "p99": 1.636,
+   "max": 6.655
+  },
+  "memavail_kb": {
+   "median": 3802576.0,
+   "p99": 3806736.0,
+   "max": 3808384.0
+  },
+  "soc_temp_max_c": 70.5,
+  "mcus": {
+   "host": {
+    "srtt_ms": {
+     "median": 0.0,
+     "p99": 0.0,
+     "max": 0.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 0.0,
+     "max": 1.0
+    },
+    "bytes_written": 30798.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.0,
+     "p99": 0.0,
+     "max": 0.0
+    }
+   },
+   "mcu": {
+    "srtt_ms": {
+     "median": 2.0,
+     "p99": 3.0,
+     "max": 5.0
+    },
+    "rttvar_ms": {
+     "median": 1.0,
+     "p99": 2.0,
+     "max": 3.0
+    },
+    "bytes_written": 33516430.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.269,
+     "p99": 0.328,
+     "max": 0.352
+    }
+   },
+   "nitehawk": {
+    "srtt_ms": {
+     "median": 1.0,
+     "p99": 1.0,
+     "max": 2.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 2.0
+    },
+    "bytes_written": 7620087.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.005,
+     "p99": 0.006,
+     "max": 0.009
+    }
+   }
+  },
+  "klippy_log_mb_per_h": 5.6,
+  "klippy_cpu_pct_of_one_core": 1.95
+ },
+ "log_writes_during_print": {
+  "klippy_log_bytes": 7861805,
+  "klippy_log_mb_per_h": 5.6,
+  "journal_bytes": 4088,
+  "moonraker_log_bytes": 1224,
+  "nginx_access_log_bytes": 306,
+  "var_log_on": "SD card (ext4 root)"
+ },
+ "sd_writes_since_boot_mb": 200.4,
+ "uptime_h": 2.37,
+ "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal/moonraker/nginx bytes limited to the job window."
+}

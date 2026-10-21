@@ -1,0 +1,114 @@
+{
+ "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window. sd_writes_since_boot covers the boot after the last warm reboot + Phase 1 bench (incl. writing and indexing the 1,234-file fixture) + print, so not comparable to the stock rows (boot + print only).",
+ "date": "2026-10-21",
+ "phase": 2,
+ "label": "kos",
+ "gcode": "bench/fixtures/flexible+railway+track+brio+short+long_PLA_1h25m.gcode",
+ "gcode_sha256": "dd546acdfec2f18aced3b03611a2d436ca8e78c58c254e8fb6e951604214d2d4",
+ "host": "BigTreeTech CB1 (Allwinner H616, 4x A53 1512 MHz, 1 GB), SD32G 32 GB SDHC",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; KOS out/kos-cb1-20261020.img (kernel 6.18.44-current-sunxi64)",
+ "job": {
+  "status": "completed",
+  "start": "00:26:36",
+  "end": "01:51:33",
+  "print_min": 82.0,
+  "total_min": 84.9
+ },
+ "klippy_log": {
+  "print_section_lines": 66759,
+  "print_section_bytes": 7916013,
+  "stats_samples": 5093,
+  "duration_s": 5095.7,
+  "timer_too_close": 0,
+  "mcu_shutdowns": 0,
+  "print_stall": 0.0,
+  "sysload": {
+   "median": 0.26,
+   "p99": 1.08,
+   "max": 1.39
+  },
+  "klippy_cputime_s": 687.9,
+  "buffer_time_s": {
+   "median": 1.178,
+   "p99": 1.692,
+   "max": 6.845
+  },
+  "memavail_kb": {
+   "median": 764432.0,
+   "p99": 769300.0,
+   "max": 770020.0
+  },
+  "soc_temp_max_c": 58.6,
+  "mcus": {
+   "host": {
+    "srtt_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 3.0
+    },
+    "bytes_written": 30996.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.001,
+     "p99": 0.001,
+     "max": 0.001
+    }
+   },
+   "mcu": {
+    "srtt_ms": {
+     "median": 1.0,
+     "p99": 2.0,
+     "max": 3.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "bytes_written": 33551028.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.263,
+     "p99": 0.321,
+     "max": 0.356
+    }
+   },
+   "nitehawk": {
+    "srtt_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 2.0
+    },
+    "bytes_written": 7662653.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.005,
+     "p99": 0.006,
+     "max": 0.008
+    }
+   }
+  },
+  "klippy_log_mb_per_h": 5.3,
+  "klippy_cpu_pct_of_one_core": 13.5
+ },
+ "log_writes_during_print": {
+  "klippy_log_bytes": 7916013,
+  "klippy_log_mb_per_h": 5.3,
+  "journal_bytes": 27571,
+  "journal_lines": 230,
+  "journal_storage": "volatile (/run/log/journal)",
+  "var_log_on": "tmpfs (RAM)"
+ },
+ "sd_writes_since_boot_mb": 762.2,
+ "uptime_h": 2.68
+}

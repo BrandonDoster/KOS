@@ -1,0 +1,87 @@
+{
+ "print_section_lines": 66707,
+ "print_section_bytes": 7875609,
+ "stats_samples": 5062,
+ "duration_s": 5063.9,
+ "timer_too_close": 0,
+ "mcu_shutdowns": 0,
+ "print_stall": 0.0,
+ "sysload": {
+  "median": 0.12,
+  "p99": 0.46,
+  "max": 0.54
+ },
+ "klippy_cputime_s": 188.0,
+ "buffer_time_s": {
+  "median": 1.179,
+  "p99": 1.633,
+  "max": 6.182
+ },
+ "memavail_kb": {
+  "median": 3796816.0,
+  "p99": 3802864.0,
+  "max": 3804288.0
+ },
+ "soc_temp_max_c": 65.0,
+ "mcus": {
+  "host": {
+   "srtt_ms": {
+    "median": 0.0,
+    "p99": 0.0,
+    "max": 0.0
+   },
+   "rttvar_ms": {
+    "median": 0.0,
+    "p99": 0.0,
+    "max": 1.0
+   },
+   "bytes_written": 30864.0,
+   "bytes_retransmit": 0.0,
+   "mcu_awake": {
+    "median": 0.0,
+    "p99": 0.0,
+    "max": 0.0
+   }
+  },
+  "mcu": {
+   "srtt_ms": {
+    "median": 2.0,
+    "p99": 4.0,
+    "max": 5.0
+   },
+   "rttvar_ms": {
+    "median": 1.0,
+    "p99": 2.0,
+    "max": 2.0
+   },
+   "bytes_written": 33529979.0,
+   "bytes_retransmit": 0.0,
+   "mcu_awake": {
+    "median": 0.271,
+    "p99": 0.331,
+    "max": 0.363
+   }
+  },
+  "nitehawk": {
+   "srtt_ms": {
+    "median": 1.0,
+    "p99": 1.0,
+    "max": 1.0
+   },
+   "rttvar_ms": {
+    "median": 0.0,
+    "p99": 1.0,
+    "max": 1.0
+   },
+   "bytes_written": 7648327.0,
+   "bytes_retransmit": 0.0,
+   "mcu_awake": {
+    "median": 0.005,
+    "p99": 0.006,
+    "max": 0.009
+   }
+  }
+ },
+ "klippy_log_mb_per_h": 5.6,
+ "klippy_cpu_pct_of_one_core": 3.71
+}

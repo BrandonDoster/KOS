@@ -1,0 +1,62 @@
+== pin Klipper c63b2951, Moonraker 9e676eb
+== Klipper host MCU (docs/RPi_microcontroller.md)
+  Creating symbolic link /tmp/linux-mcu/board
+  Building /tmp/linux-mcu/autoconf.h
+  Compiling /tmp/linux-mcu/src/sched.o
+  Compiling /tmp/linux-mcu/src/command.o
+  Compiling /tmp/linux-mcu/src/basecmd.o
+  Compiling /tmp/linux-mcu/src/debugcmds.o
+  Compiling /tmp/linux-mcu/src/initial_pins.o
+  Compiling /tmp/linux-mcu/src/gpiocmds.o
+  Compiling /tmp/linux-mcu/src/stepper.o
+  Compiling /tmp/linux-mcu/src/endstop.o
+  Compiling /tmp/linux-mcu/src/trsync.o
+  Compiling /tmp/linux-mcu/src/adccmds.o
+  Compiling /tmp/linux-mcu/src/spicmds.o
+  Compiling /tmp/linux-mcu/src/i2ccmds.o
+  Compiling /tmp/linux-mcu/src/pwmcmds.o
+  Compiling /tmp/linux-mcu/src/buttons.o
+  Compiling /tmp/linux-mcu/src/tmcuart.o
+  Compiling /tmp/linux-mcu/src/neopixel.o
+  Compiling /tmp/linux-mcu/src/pulse_counter.o
+  Compiling /tmp/linux-mcu/src/lcd_st7920.o
+  Compiling /tmp/linux-mcu/src/lcd_hd44780.o
+  Compiling /tmp/linux-mcu/src/spi_software.o
+  Compiling /tmp/linux-mcu/src/i2c_software.o
+  Compiling /tmp/linux-mcu/src/thermocouple.o
+  Compiling /tmp/linux-mcu/src/sensor_adxl345.o
+  Compiling /tmp/linux-mcu/src/sensor_lis2dw.o
+  Compiling /tmp/linux-mcu/src/sensor_bmi160.o
+  Compiling /tmp/linux-mcu/src/sensor_mpu9250.o
+  Compiling /tmp/linux-mcu/src/sensor_icm20948.o
+  Compiling /tmp/linux-mcu/src/sensor_hx71x.o
+  Compiling /tmp/linux-mcu/src/sensor_cs1237.o
+  Compiling /tmp/linux-mcu/src/sensor_ads1220.o
+  Compiling /tmp/linux-mcu/src/sensor_ads131m0x.o
+  Compiling /tmp/linux-mcu/src/sensor_ldc1612.o
+  Compiling /tmp/linux-mcu/src/sensor_angle.o
+  Compiling /tmp/linux-mcu/src/sensor_bulk.o
+  Compiling /tmp/linux-mcu/src/sos_filter.o
+  Compiling /tmp/linux-mcu/src/trigger_analog.o
+  Compiling /tmp/linux-mcu/src/linux/main.o
+  Compiling /tmp/linux-mcu/src/linux/timer.o
+  Compiling /tmp/linux-mcu/src/linux/console.o
+  Compiling /tmp/linux-mcu/src/linux/watchdog.o
+  Compiling /tmp/linux-mcu/src/linux/pca9685.o
+  Compiling /tmp/linux-mcu/src/linux/spidev.o
+  Compiling /tmp/linux-mcu/src/linux/analog.o
+  Compiling /tmp/linux-mcu/src/linux/hard_pwm.o
+  Compiling /tmp/linux-mcu/src/linux/i2c.o
+  Compiling /tmp/linux-mcu/src/linux/gpio.o
+  Compiling /tmp/linux-mcu/src/generic/crc16_ccitt.o
+  Compiling /tmp/linux-mcu/src/generic/alloc.o
+  Compiling /tmp/linux-mcu/src/linux/sensor_ds18b20.o
+  Building /tmp/linux-mcu/compile_time_request.o
+Loaded configuration '/tmp/linux-mcu.config'
+Minimal configuration saved to '/tmp/linux-mcu/defconfig'
+Version: v0.13.0-809-gc63b2951
+  Linking /tmp/linux-mcu/klipper.elf
+== CAN: left to the image's /etc/network/interfaces.d/can0
+== printer config from /home/biqu/kos-bench/sindri-config
+== Klippy: ready. Klipper v0.13.0-809-gc63b2951, Moonraker v0.11.0-3-g9e676eb
+Reboot (cold: pull power) before benchmarking, so the run starts from a fresh boot.

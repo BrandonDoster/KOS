@@ -1,0 +1,57 @@
+{
+ "boot_systemd": "Startup finished in 4.345s (kernel) + 21.004s (userspace) = 25.349s",
+ "cmdline": "root=UUID=98a35c3f-0d3b-4eb6-984c-3205a7acd52d rootwait rootfstype=ext4 splash=verbose console=ttyS0,115200 console=tty1 consoleblank=0 loglevel=1 ubootpart=bd1fb1dd-01 usb-storage.quirks=0x2537:0x1066:u,0x2537:0x1068:u  selinux=0 cgroup_enable=memory",
+ "moonraker_get_directory_s": {
+  "first": 3.518061,
+  "median_warm": 3.4958204999999998,
+  "all": [
+   3.518061,
+   3.477947,
+   3.507141,
+   3.491874,
+   3.499767
+  ]
+ },
+ "footprint_clean": true,
+ "governor": "ondemand",
+ "hw_cpu_max_mhz": 1512,
+ "hw_model": "BigTreeTech CB1",
+ "hw_note": "BTT CB1 on Manta M5P; Nitehawk 36 USB; [mcu host]; wired; Sindri",
+ "hw_ram_mb": 969,
+ "hw_sd": "mmcblk1 SD32G manfid=0x000027 oemid=0x5048 date=08/2020 28 GiB",
+ "isolated": "",
+ "kernel": "7.0.2-vendor-sunxi64",
+ "klipper": "v0.13.0-809-gc63b2951",
+ "klippy_cpus": "0-3",
+ "klippy_ready_s": 34.4,
+ "klippy_state": "ready",
+ "label": "stock",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 7,
+  "p99_us": 89,
+  "p999_us": 153,
+  "max_us": 277
+ },
+ "lat_load": {
+  "samples": 59999,
+  "p50_us": 43,
+  "p99_us": 168,
+  "p999_us": 381,
+  "max_us": 1196
+ },
+ "mainsail": "v2.17.0",
+ "mem_available_mb": 647,
+ "mem_used_mb": 320,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 1,
+ "moonraker_metadata_files": 1234,
+ "moonraker_metadata_s": 1189,
+ "os": "BIGTREETECH-CB1 3.1.0-26.05.0-trunk trixie",
+ "packages": 993,
+ "processes": 168,
+ "rootfs_used_mb": 4876,
+ "sd_write_mb_per_h_idle": 4.3,
+ "sd_write_mb_per_h_since_boot": 112.5,
+ "services_running": 27
+}

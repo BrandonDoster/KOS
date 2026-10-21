@@ -1,0 +1,114 @@
+{
+ "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window (journalctl --since/--until). sd_writes_since_boot covers boot + print only (no Phase 1 bench in this boot, unlike the CM5 runs).",
+ "date": "2026-10-20",
+ "phase": 2,
+ "label": "stock-tuned",
+ "gcode": "bench/fixtures/flexible+railway+track+brio+short+long_PLA_1h25m.gcode",
+ "gcode_sha256": "dd546acdfec2f18aced3b03611a2d436ca8e78c58c254e8fb6e951604214d2d4",
+ "host": "BigTreeTech CB1 (Allwinner H616, 4x A53 1512 MHz, 1 GB), SD32G 32 GB SDHC",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; BTT CB1 image 3.1.0-26.05.0 (kernel 7.0.2-vendor-sunxi64) + stock_prep.sh, + stock_tune.sh (isolcpus=3, performance governor via cmdline + cpufrequtils, Klippy CPUAffinity=3 Nice=-18, kos-tune IRQs on 1-2 incl. 30 s timer)",
+ "job": {
+  "status": "completed",
+  "start": "21:21:56",
+  "end": "22:45:46",
+  "print_min": 82.0,
+  "total_min": 83.8
+ },
+ "klippy_log": {
+  "print_section_lines": 66646,
+  "print_section_bytes": 7821458,
+  "stats_samples": 5026,
+  "duration_s": 5029.1,
+  "timer_too_close": 0,
+  "mcu_shutdowns": 0,
+  "print_stall": 0.0,
+  "sysload": {
+   "median": 0.79,
+   "p99": 2.34,
+   "max": 2.61
+  },
+  "klippy_cputime_s": 745.1,
+  "buffer_time_s": {
+   "median": 1.176,
+   "p99": 1.616,
+   "max": 6.26
+  },
+  "memavail_kb": {
+   "median": 665644.0,
+   "p99": 672444.0,
+   "max": 673168.0
+  },
+  "soc_temp_max_c": 62.3,
+  "mcus": {
+   "host": {
+    "srtt_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 2.0
+    },
+    "bytes_written": 30588.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.001,
+     "p99": 0.001,
+     "max": 0.001
+    }
+   },
+   "mcu": {
+    "srtt_ms": {
+     "median": 1.0,
+     "p99": 2.0,
+     "max": 3.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "bytes_written": 33470094.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.261,
+     "p99": 0.318,
+     "max": 0.359
+    }
+   },
+   "nitehawk": {
+    "srtt_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 1.0
+    },
+    "rttvar_ms": {
+     "median": 0.0,
+     "p99": 1.0,
+     "max": 2.0
+    },
+    "bytes_written": 7603834.0,
+    "bytes_retransmit": 0.0,
+    "mcu_awake": {
+     "median": 0.005,
+     "p99": 0.005,
+     "max": 0.01
+    }
+   }
+  },
+  "klippy_log_mb_per_h": 5.3,
+  "klippy_cpu_pct_of_one_core": 14.8
+ },
+ "log_writes_during_print": {
+  "klippy_log_bytes": 7821458,
+  "klippy_log_mb_per_h": 5.3,
+  "journal_bytes": 19551,
+  "journal_lines": 146,
+  "journal_storage": "volatile (/run/log/journal)",
+  "var_log_on": "SD card (ext4 root)"
+ },
+ "sd_writes_since_boot_mb": 61.0,
+ "uptime_h": 1.54
+}

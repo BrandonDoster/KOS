@@ -1,0 +1,60 @@
+{
+ "boot_systemd": "Startup finished in 2.294s (kernel) + 7.634s (userspace) = 9.929s",
+ "cmdline": "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe cgroup_disable=memory numa_policy=interleave nvme.max_host_mem_size_mb=32 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=8 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=2C:CF:67:XX:XX:XX vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 console=tty1 root=LABEL=KOS-ROOT rootfstype=ext4 fsck.repair=yes rootwait consoleblank=0 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d",
+ "moonraker_get_directory_s": {
+  "first": 0.389101,
+  "median_warm": 0.38866,
+  "all": [
+   0.389101,
+   0.389401,
+   0.389258,
+   0.386492,
+   0.388062
+  ]
+ },
+ "footprint_clean": false,
+ "governor": "performance",
+ "hw_cpu_max_mhz": 2400,
+ "hw_model": "Raspberry Pi Compute Module 5 Lite Rev 1.0",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; image kos-cm5-20261019 pm",
+ "hw_ram_mb": 4049,
+ "hw_sd": "mmcblk0 SD32G manfid=0x000027 oemid=0x5048 date=08/2020 28 GiB",
+ "isolated": 3,
+ "kernel": "6.18.50+rpt-rpi-2712",
+ "klipper": "v0.13.0-809-gc63b2951",
+ "klippy_cpus": 3,
+ "klippy_ready_s": 10.9,
+ "klippy_state": "ready",
+ "label": "kos",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 3,
+  "p999_us": 4,
+  "max_us": 9
+ },
+ "lat_load": {
+  "samples": 60000,
+  "p50_us": 1,
+  "p99_us": 16,
+  "p999_us": 36,
+  "max_us": 92
+ },
+ "mainsail": "v2.19.0",
+ "mem_available_mb": 3713,
+ "mem_used_mb": 335,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 0,
+ "moonraker_metadata_files": 1234,
+ "moonraker_metadata_s": 183,
+ "os": "Debian GNU/Linux 13 (trixie)",
+ "packages": 352,
+ "processes": 157,
+ "rootfs_used_mb": 1566,
+ "sd_write_mb_per_h_idle": 4.3,
+ "sd_write_mb_per_h_since_boot": 161.3,
+ "services_running": 21,
+ "_corrections": [
+  "Valid run: listing timed after all 1,234 files had metadata (moonraker_metadata_s=183). Side effect: the wait loop polled a full extended listing every 2 s during extraction, which made Moonraker log 46 msgspec.DecodeError (Input data was truncated) and requeue those files; listing times unaffected. Wait loop changed afterwards to poll a single file. footprint_clean=false: bench tools from earlier runs installed."
+ ]
+}

@@ -1,0 +1,615 @@
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ sudo apt-get update
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Hit:2 http://deb.debian.org/debian trixie-updates InRelease
+Hit:3 http://deb.debian.org/debian-security trixie-security InRelease
+Hit:4 http://archive.raspberrypi.com/debian trixie InRelease
+Reading package lists...
++ sudo apt-get -y full-upgrade
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ sudo apt-get install -y git unzip curl
+Reading package lists...
+Building dependency tree...
+Reading state information...
+git is already the newest version (1:2.47.3-0+deb13u1).
+unzip is already the newest version (6.0-29+deb13u1).
+curl is already the newest version (8.14.1-2+deb13u7).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ cd /home/brandon
++ '[' -d klipper ']'
++ sudo apt-get install -y virtualenv python3-dev libffi-dev build-essential libncurses-dev libusb-dev avrdude gcc-avr binutils-avr avr-libc stm32flash dfu-util libnewlib-arm-none-eabi gcc-arm-none-eabi binutils-arm-none-eabi libusb-1.0-0 pkg-config
+Reading package lists...
+Building dependency tree...
+Reading state information...
+build-essential is already the newest version (12.12).
+libusb-1.0-0 is already the newest version (2:1.0.28-1).
+libusb-1.0-0 set to manually installed.
+pkg-config is already the newest version (1.8.1-4).
+The following additional packages will be installed:
+  javascript-common libexpat1-dev libftdi1 libgpm2 libhidapi-libusb0
+  libjs-jquery libjs-sphinxdoc libjs-underscore libncurses6 libnewlib-dev
+  libpython3-dev libpython3.13-dev libstdc++-arm-none-eabi-dev
+  libstdc++-arm-none-eabi-newlib libusb-0.1-4 python3-distlib python3-filelock
+  python3-platformdirs python3-virtualenv python3.13-dev zlib1g-dev
+Suggested packages:
+  dfu-programmer avrdude-doc gcc-doc apache2 | lighttpd | httpd gpm
+  ncurses-doc libnewlib-doc
+The following NEW packages will be installed:
+  avr-libc avrdude binutils-arm-none-eabi binutils-avr dfu-util
+  gcc-arm-none-eabi gcc-avr javascript-common libexpat1-dev libffi-dev
+  libftdi1 libgpm2 libhidapi-libusb0 libjs-jquery libjs-sphinxdoc
+  libjs-underscore libncurses-dev libncurses6 libnewlib-arm-none-eabi
+  libnewlib-dev libpython3-dev libpython3.13-dev libstdc++-arm-none-eabi-dev
+  libstdc++-arm-none-eabi-newlib libusb-0.1-4 libusb-dev python3-dev
+  python3-distlib python3-filelock python3-platformdirs python3-virtualenv
+  python3.13-dev stm32flash virtualenv zlib1g-dev
+0 upgraded, 35 newly installed, 0 to remove and 0 not upgraded.
+Need to get 605 MB of archives.
+After this operation, 3,663 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main arm64 binutils-avr arm64 2.43.50.20250108-1 [1,890 kB]
+Get:2 http://deb.debian.org/debian trixie/main arm64 gcc-avr arm64 1:14.2.0-2 [45.5 MB]
+Get:3 http://deb.debian.org/debian trixie/main arm64 avr-libc all 1:2.2.1-1 [4,428 kB]
+Get:4 http://deb.debian.org/debian trixie/main arm64 libusb-0.1-4 arm64 2:0.1.12-35+b1 [16.4 kB]
+Get:5 http://deb.debian.org/debian trixie/main arm64 libftdi1 arm64 0.20-4+b2 [17.5 kB]
+Get:6 http://deb.debian.org/debian trixie/main arm64 libhidapi-libusb0 arm64 0.14.0-1+b2 [15.8 kB]
+Get:7 http://deb.debian.org/debian trixie/main arm64 avrdude arm64 7.1+dfsg-3+b3 [366 kB]
+Get:8 http://deb.debian.org/debian trixie/main arm64 binutils-arm-none-eabi arm64 2.44-3+23+b2 [2,764 kB]
+Get:9 http://deb.debian.org/debian trixie/main arm64 dfu-util arm64 0.11-3 [41.1 kB]
+Get:10 http://deb.debian.org/debian trixie/main arm64 gcc-arm-none-eabi arm64 15:14.2.rel1-1 [53.8 MB]
+Get:11 http://deb.debian.org/debian trixie/main arm64 javascript-common all 12+nmu1 [4,864 B]
+Get:12 http://deb.debian.org/debian-security trixie-security/main arm64 libexpat1-dev arm64 2.9.0-1~deb13u1 [171 kB]
+Get:13 http://deb.debian.org/debian trixie/main arm64 libffi-dev arm64 3.4.8-2 [57.2 kB]
+Get:14 http://deb.debian.org/debian trixie/main arm64 libgpm2 arm64 1.20.7-11+b2 [14.7 kB]
+Get:15 http://deb.debian.org/debian trixie/main arm64 libjs-jquery all 3.6.1+dfsg+~3.5.14-1 [326 kB]
+Get:16 http://deb.debian.org/debian trixie/main arm64 libjs-underscore all 1.13.4~dfsg+~1.11.4-3 [116 kB]
+Get:17 http://deb.debian.org/debian trixie/main arm64 libjs-sphinxdoc all 8.1.3-5 [30.5 kB]
+Get:18 http://deb.debian.org/debian trixie/main arm64 libncurses6 arm64 6.5+20250216-2 [96.1 kB]
+Get:19 http://deb.debian.org/debian trixie/main arm64 libncurses-dev arm64 6.5+20250216-2 [340 kB]
+Get:20 http://deb.debian.org/debian trixie/main arm64 libnewlib-dev all 4.5.0.20241231-1 [263 kB]
+Get:21 http://deb.debian.org/debian trixie/main arm64 libnewlib-arm-none-eabi all 4.5.0.20241231-1 [48.3 MB]
+Get:22 http://deb.debian.org/debian trixie/main arm64 zlib1g-dev arm64 1:1.3.dfsg+really1.3.1-1+b1 [917 kB]
+Get:23 http://deb.debian.org/debian trixie/main arm64 libpython3.13-dev arm64 3.13.5-2+deb13u5 [4,933 kB]
+Get:24 http://deb.debian.org/debian trixie/main arm64 libpython3-dev arm64 3.13.5-1 [10.4 kB]
+Get:25 http://deb.debian.org/debian trixie/main arm64 libstdc++-arm-none-eabi-dev all 15:14.2.rel1-1+29 [1,364 kB]
+Get:26 http://deb.debian.org/debian trixie/main arm64 libstdc++-arm-none-eabi-newlib all 15:14.2.rel1-1+29 [439 MB]
+Get:27 http://deb.debian.org/debian trixie/main arm64 libusb-dev arm64 2:0.1.12-35+b1 [32.5 kB]
+Get:28 http://deb.debian.org/debian trixie/main arm64 python3.13-dev arm64 3.13.5-2+deb13u5 [504 kB]
+Get:29 http://deb.debian.org/debian trixie/main arm64 python3-dev arm64 3.13.5-1 [26.1 kB]
+Get:30 http://deb.debian.org/debian trixie/main arm64 python3-distlib all 0.3.9-1 [257 kB]
+Get:31 http://deb.debian.org/debian trixie/main arm64 python3-filelock all 3.18.0-1+deb13u1 [13.4 kB]
+Get:32 http://deb.debian.org/debian trixie/main arm64 python3-platformdirs all 4.3.7-1 [16.6 kB]
+Get:33 http://deb.debian.org/debian trixie/main arm64 python3-virtualenv all 20.31.2+ds-1+deb13u1 [72.9 kB]
+Get:34 http://deb.debian.org/debian trixie/main arm64 stm32flash arm64 0.7-1+b1 [32.0 kB]
+Get:35 http://deb.debian.org/debian trixie/main arm64 virtualenv all 20.31.2+ds-1+deb13u1 [7,484 B]
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Fetched 605 MB in 29s (20.7 MB/s)
+Selecting previously unselected package binutils-avr.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 67927 files and directories currently installed.)
+Preparing to unpack .../00-binutils-avr_2.43.50.20250108-1_arm64.deb ...
+Unpacking binutils-avr (2.43.50.20250108-1) ...
+Selecting previously unselected package gcc-avr.
+Preparing to unpack .../01-gcc-avr_1%3a14.2.0-2_arm64.deb ...
+Unpacking gcc-avr (1:14.2.0-2) ...
+Selecting previously unselected package avr-libc.
+Preparing to unpack .../02-avr-libc_1%3a2.2.1-1_all.deb ...
+Unpacking avr-libc (1:2.2.1-1) ...
+Selecting previously unselected package libusb-0.1-4:arm64.
+Preparing to unpack .../03-libusb-0.1-4_2%3a0.1.12-35+b1_arm64.deb ...
+Unpacking libusb-0.1-4:arm64 (2:0.1.12-35+b1) ...
+Selecting previously unselected package libftdi1:arm64.
+Preparing to unpack .../04-libftdi1_0.20-4+b2_arm64.deb ...
+Unpacking libftdi1:arm64 (0.20-4+b2) ...
+Selecting previously unselected package libhidapi-libusb0:arm64.
+Preparing to unpack .../05-libhidapi-libusb0_0.14.0-1+b2_arm64.deb ...
+Unpacking libhidapi-libusb0:arm64 (0.14.0-1+b2) ...
+Selecting previously unselected package avrdude.
+Preparing to unpack .../06-avrdude_7.1+dfsg-3+b3_arm64.deb ...
+Unpacking avrdude (7.1+dfsg-3+b3) ...
+Selecting previously unselected package binutils-arm-none-eabi.
+Preparing to unpack .../07-binutils-arm-none-eabi_2.44-3+23+b2_arm64.deb ...
+Unpacking binutils-arm-none-eabi (2.44-3+23+b2) ...
+Selecting previously unselected package dfu-util.
+Preparing to unpack .../08-dfu-util_0.11-3_arm64.deb ...
+Unpacking dfu-util (0.11-3) ...
+Selecting previously unselected package gcc-arm-none-eabi.
+Preparing to unpack .../09-gcc-arm-none-eabi_15%3a14.2.rel1-1_arm64.deb ...
+Unpacking gcc-arm-none-eabi (15:14.2.rel1-1) ...
+Selecting previously unselected package javascript-common.
+Preparing to unpack .../10-javascript-common_12+nmu1_all.deb ...
+Unpacking javascript-common (12+nmu1) ...
+Selecting previously unselected package libexpat1-dev:arm64.
+Preparing to unpack .../11-libexpat1-dev_2.9.0-1~deb13u1_arm64.deb ...
+Unpacking libexpat1-dev:arm64 (2.9.0-1~deb13u1) ...
+Selecting previously unselected package libffi-dev:arm64.
+Preparing to unpack .../12-libffi-dev_3.4.8-2_arm64.deb ...
+Unpacking libffi-dev:arm64 (3.4.8-2) ...
+Selecting previously unselected package libgpm2:arm64.
+Preparing to unpack .../13-libgpm2_1.20.7-11+b2_arm64.deb ...
+Unpacking libgpm2:arm64 (1.20.7-11+b2) ...
+Selecting previously unselected package libjs-jquery.
+Preparing to unpack .../14-libjs-jquery_3.6.1+dfsg+~3.5.14-1_all.deb ...
+Unpacking libjs-jquery (3.6.1+dfsg+~3.5.14-1) ...
+Selecting previously unselected package libjs-underscore.
+Preparing to unpack .../15-libjs-underscore_1.13.4~dfsg+~1.11.4-3_all.deb ...
+Unpacking libjs-underscore (1.13.4~dfsg+~1.11.4-3) ...
+Selecting previously unselected package libjs-sphinxdoc.
+Preparing to unpack .../16-libjs-sphinxdoc_8.1.3-5_all.deb ...
+Unpacking libjs-sphinxdoc (8.1.3-5) ...
+Selecting previously unselected package libncurses6:arm64.
+Preparing to unpack .../17-libncurses6_6.5+20250216-2_arm64.deb ...
+Unpacking libncurses6:arm64 (6.5+20250216-2) ...
+Selecting previously unselected package libncurses-dev:arm64.
+Preparing to unpack .../18-libncurses-dev_6.5+20250216-2_arm64.deb ...
+Unpacking libncurses-dev:arm64 (6.5+20250216-2) ...
+Selecting previously unselected package libnewlib-dev.
+Preparing to unpack .../19-libnewlib-dev_4.5.0.20241231-1_all.deb ...
+Unpacking libnewlib-dev (4.5.0.20241231-1) ...
+Selecting previously unselected package libnewlib-arm-none-eabi.
+Preparing to unpack .../20-libnewlib-arm-none-eabi_4.5.0.20241231-1_all.deb ...
+Unpacking libnewlib-arm-none-eabi (4.5.0.20241231-1) ...
+Selecting previously unselected package zlib1g-dev:arm64.
+Preparing to unpack .../21-zlib1g-dev_1%3a1.3.dfsg+really1.3.1-1+b1_arm64.deb ...
+Unpacking zlib1g-dev:arm64 (1:1.3.dfsg+really1.3.1-1+b1) ...
+Selecting previously unselected package libpython3.13-dev:arm64.
+Preparing to unpack .../22-libpython3.13-dev_3.13.5-2+deb13u5_arm64.deb ...
+Unpacking libpython3.13-dev:arm64 (3.13.5-2+deb13u5) ...
+Selecting previously unselected package libpython3-dev:arm64.
+Preparing to unpack .../23-libpython3-dev_3.13.5-1_arm64.deb ...
+Unpacking libpython3-dev:arm64 (3.13.5-1) ...
+Selecting previously unselected package libstdc++-arm-none-eabi-dev.
+Preparing to unpack .../24-libstdc++-arm-none-eabi-dev_15%3a14.2.rel1-1+29_all.deb ...
+Unpacking libstdc++-arm-none-eabi-dev (15:14.2.rel1-1+29) ...
+Selecting previously unselected package libstdc++-arm-none-eabi-newlib.
+Preparing to unpack .../25-libstdc++-arm-none-eabi-newlib_15%3a14.2.rel1-1+29_all.deb ...
+Unpacking libstdc++-arm-none-eabi-newlib (15:14.2.rel1-1+29) ...
+Selecting previously unselected package libusb-dev.
+Preparing to unpack .../26-libusb-dev_2%3a0.1.12-35+b1_arm64.deb ...
+Unpacking libusb-dev (2:0.1.12-35+b1) ...
+Selecting previously unselected package python3.13-dev.
+Preparing to unpack .../27-python3.13-dev_3.13.5-2+deb13u5_arm64.deb ...
+Unpacking python3.13-dev (3.13.5-2+deb13u5) ...
+Selecting previously unselected package python3-dev.
+Preparing to unpack .../28-python3-dev_3.13.5-1_arm64.deb ...
+Unpacking python3-dev (3.13.5-1) ...
+Selecting previously unselected package python3-distlib.
+Preparing to unpack .../29-python3-distlib_0.3.9-1_all.deb ...
+Unpacking python3-distlib (0.3.9-1) ...
+Selecting previously unselected package python3-filelock.
+Preparing to unpack .../30-python3-filelock_3.18.0-1+deb13u1_all.deb ...
+Unpacking python3-filelock (3.18.0-1+deb13u1) ...
+Selecting previously unselected package python3-platformdirs.
+Preparing to unpack .../31-python3-platformdirs_4.3.7-1_all.deb ...
+Unpacking python3-platformdirs (4.3.7-1) ...
+Selecting previously unselected package python3-virtualenv.
+Preparing to unpack .../32-python3-virtualenv_20.31.2+ds-1+deb13u1_all.deb ...
+Unpacking python3-virtualenv (20.31.2+ds-1+deb13u1) ...
+Selecting previously unselected package stm32flash.
+Preparing to unpack .../33-stm32flash_0.7-1+b1_arm64.deb ...
+Unpacking stm32flash (0.7-1+b1) ...
+Selecting previously unselected package virtualenv.
+Preparing to unpack .../34-virtualenv_20.31.2+ds-1+deb13u1_all.deb ...
+Unpacking virtualenv (20.31.2+ds-1+deb13u1) ...
+Setting up binutils-avr (2.43.50.20250108-1) ...
+Setting up javascript-common (12+nmu1) ...
+Setting up python3-filelock (3.18.0-1+deb13u1) ...
+Setting up binutils-arm-none-eabi (2.44-3+23+b2) ...
+Setting up libgpm2:arm64 (1.20.7-11+b2) ...
+Setting up gcc-arm-none-eabi (15:14.2.rel1-1) ...
+Setting up python3-distlib (0.3.9-1) ...
+Setting up libffi-dev:arm64 (3.4.8-2) ...
+Setting up python3-platformdirs (4.3.7-1) ...
+Setting up stm32flash (0.7-1+b1) ...
+Setting up libusb-0.1-4:arm64 (2:0.1.12-35+b1) ...
+Setting up gcc-avr (1:14.2.0-2) ...
+Setting up libexpat1-dev:arm64 (2.9.0-1~deb13u1) ...
+Setting up libncurses6:arm64 (6.5+20250216-2) ...
+Setting up libnewlib-dev (4.5.0.20241231-1) ...
+Setting up libhidapi-libusb0:arm64 (0.14.0-1+b2) ...
+Setting up libnewlib-arm-none-eabi (4.5.0.20241231-1) ...
+Setting up zlib1g-dev:arm64 (1:1.3.dfsg+really1.3.1-1+b1) ...
+Setting up libjs-jquery (3.6.1+dfsg+~3.5.14-1) ...
+Setting up dfu-util (0.11-3) ...
+Setting up libjs-underscore (1.13.4~dfsg+~1.11.4-3) ...
+Setting up libncurses-dev:arm64 (6.5+20250216-2) ...
+Setting up libstdc++-arm-none-eabi-dev (15:14.2.rel1-1+29) ...
+Setting up libftdi1:arm64 (0.20-4+b2) ...
+Setting up python3-virtualenv (20.31.2+ds-1+deb13u1) ...
+Setting up libusb-dev (2:0.1.12-35+b1) ...
+Setting up avr-libc (1:2.2.1-1) ...
+Setting up libstdc++-arm-none-eabi-newlib (15:14.2.rel1-1+29) ...
+Setting up libpython3.13-dev:arm64 (3.13.5-2+deb13u5) ...
+Setting up virtualenv (20.31.2+ds-1+deb13u1) ...
+Setting up libjs-sphinxdoc (8.1.3-5) ...
+Setting up libpython3-dev:arm64 (3.13.5-1) ...
+Setting up avrdude (7.1+dfsg-3+b3) ...
+Setting up python3.13-dev (3.13.5-2+deb13u5) ...
+Setting up python3-dev (3.13.5-1) ...
+Processing triggers for man-db (2.13.1-1) ...
+Processing triggers for libc-bin (2.41-12+rpt1+deb13u4) ...
++ '[' -d klippy-env ']'
++ virtualenv -p python3 klippy-env
+created virtual environment CPython3.13.5.final.0-64 in 248ms
+  creator CPython3Posix(dest=/home/brandon/klippy-env, clear=False, no_vcs_ignore=False, global=False)
+  seeder FromAppData(download=False, pip=bundle, via=copy, app_data_dir=/home/brandon/.local/share/virtualenv)
+    added seed packages: pip==25.1.1
+  activators BashActivator,CShellActivator,FishActivator,NushellActivator,PowerShellActivator,PythonActivator
++ klippy-env/bin/pip install -r klipper/scripts/klippy-requirements.txt
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Ignoring greenlet: markers 'python_version < "3.12"' don't match your environment
+Ignoring cffi: markers 'python_version < "3.12"' don't match your environment
+Collecting greenlet==3.3.2 (from -r klipper/scripts/klippy-requirements.txt (line 8))
+  Downloading greenlet-3.3.2-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl.metadata (3.7 kB)
+Collecting cffi==2.1.1 (from -r klipper/scripts/klippy-requirements.txt (line 11))
+  Downloading cffi-2.1.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl.metadata (2.5 kB)
+Collecting Jinja2==2.11.3 (from -r klipper/scripts/klippy-requirements.txt (line 13))
+  Downloading https://www.piwheels.org/simple/jinja2/Jinja2-2.11.3-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting markupsafe==1.1.1 (from -r klipper/scripts/klippy-requirements.txt (line 14))
+  Downloading MarkupSafe-1.1.1.tar.gz (19 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting pyserial==3.4 (from -r klipper/scripts/klippy-requirements.txt (line 16))
+  Downloading https://www.piwheels.org/simple/pyserial/pyserial-3.4-py2.py3-none-any.whl.metadata (1.6 kB)
+Collecting python-can==3.3.4 (from -r klipper/scripts/klippy-requirements.txt (line 18))
+  Downloading https://www.piwheels.org/simple/python-can/python_can-3.3.4-py2.py3-none-any.whl.metadata (6.7 kB)
+Collecting setuptools==78.1.1 (from -r klipper/scripts/klippy-requirements.txt (line 19))
+  Downloading https://www.piwheels.org/simple/setuptools/setuptools-78.1.1-py3-none-any.whl.metadata (6.5 kB)
+Collecting msgspec==0.19.0 (from -r klipper/scripts/klippy-requirements.txt (line 21))
+  Downloading msgspec-0.19.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (6.9 kB)
+Collecting pycparser (from cffi==2.1.1->-r klipper/scripts/klippy-requirements.txt (line 11))
+  Downloading https://www.piwheels.org/simple/pycparser/pycparser-3.11-py3-none-any.whl.metadata (8.2 kB)
+Collecting aenum (from python-can==3.3.4->-r klipper/scripts/klippy-requirements.txt (line 18))
+  Downloading https://www.piwheels.org/simple/aenum/aenum-3.1.17-py3-none-any.whl.metadata (4.0 kB)
+Collecting wrapt~=1.10 (from python-can==3.3.4->-r klipper/scripts/klippy-requirements.txt (line 18))
+  Downloading wrapt-1.17.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (6.4 kB)
+Downloading greenlet-3.3.2-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl (603 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 603.2/603.2 kB 9.0 MB/s eta 0:00:00
+Downloading cffi-2.1.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (222 kB)
+Downloading https://www.piwheels.org/simple/jinja2/Jinja2-2.11.3-py2.py3-none-any.whl (125 kB)
+Downloading https://www.piwheels.org/simple/pyserial/pyserial-3.4-py2.py3-none-any.whl (193 kB)
+Downloading https://www.piwheels.org/simple/python-can/python_can-3.3.4-py2.py3-none-any.whl (157 kB)
+Downloading https://www.piwheels.org/simple/setuptools/setuptools-78.1.1-py3-none-any.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 3.2 MB/s eta 0:00:00
+Downloading msgspec-0.19.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (210 kB)
+Downloading wrapt-1.17.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (88 kB)
+Downloading https://www.piwheels.org/simple/aenum/aenum-3.1.17-py3-none-any.whl (138 kB)
+Downloading https://www.piwheels.org/simple/pycparser/pycparser-3.11-py3-none-any.whl (51 kB)
+Building wheels for collected packages: markupsafe
+  Building wheel for markupsafe (pyproject.toml): started
+  Building wheel for markupsafe (pyproject.toml): finished with status 'done'
+  Created wheel for markupsafe: filename=markupsafe-1.1.1-cp313-cp313-linux_aarch64.whl size=30204 sha256=2d9f695301edde4e7307e16e238610ddb6783d60923220f69248357e15ed6a1a
+  Stored in directory: /home/brandon/.cache/pip/wheels/50/9d/09/bccf8f0a705401cbb7831ea050f14912fe0ad749459d2d1d40
+Successfully built markupsafe
+Installing collected packages: pyserial, aenum, wrapt, setuptools, pycparser, msgspec, markupsafe, greenlet, python-can, Jinja2, cffi
+
+Successfully installed Jinja2-2.11.3 aenum-3.1.17 cffi-2.1.1 greenlet-3.3.2 markupsafe-1.1.1 msgspec-0.19.0 pycparser-3.11 pyserial-3.4 python-can-3.3.4 setuptools-78.1.1 wrapt-1.17.3
++ mkdir -p printer_data/config printer_data/logs printer_data/comms printer_data/systemd printer_data/gcodes printer_data/database
++ echo 'KLIPPER_ARGS="/home/brandon/klipper/klippy/klippy.py /home/brandon/printer_data/config/printer.cfg -I /home/brandon/printer_data/comms/klippy.serial -l /home/brandon/printer_data/logs/klippy.log -a /home/brandon/printer_data/comms/klippy.sock"'
++ sudo tee /etc/systemd/system/klipper.service
++ sudo systemctl daemon-reload
++ sudo systemctl enable klipper
+Created symlink '/etc/systemd/system/multi-user.target.wants/klipper.service' → '/etc/systemd/system/klipper.service'.
++ '[' -d moonraker ']'
++ git clone https://github.com/Arksine/moonraker.git
+Cloning into 'moonraker'...
++ ./moonraker/scripts/install-moonraker.sh
+Installing from Moonraker source...
+
+
+###### Installing Moonraker System Packages...
+Linux Distribution: debian 13
+Packages: python3-virtualenv python3-dev libopenjp2-7 libsodium-dev zlib1g-dev libjpeg-dev packagekit wireless-tools python3-libcamera curl build-essential
+
+
+###### Running apt-get update...
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Hit:2 http://deb.debian.org/debian trixie-updates InRelease
+Hit:3 http://deb.debian.org/debian-security trixie-security InRelease
+Hit:4 http://archive.raspberrypi.com/debian trixie InRelease
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+python3-virtualenv is already the newest version (20.31.2+ds-1+deb13u1).
+python3-virtualenv set to manually installed.
+python3-dev is already the newest version (3.13.5-1).
+zlib1g-dev is already the newest version (1:1.3.dfsg+really1.3.1-1+b1).
+zlib1g-dev set to manually installed.
+wireless-tools is already the newest version (30~pre9-18+b1).
+curl is already the newest version (8.14.1-2+deb13u7).
+build-essential is already the newest version (12.12).
+The following additional packages will be installed:
+  appstream libappstream5 libglib2.0-bin libgstreamer1.0-0 libjpeg62-turbo-dev
+  libpackagekit-glib2-18 libsodium23 libstemmer0d libxmlb2 packagekit-tools
+Suggested packages:
+  apt-config-icons gstreamer1.0-tools
+The following NEW packages will be installed:
+  appstream libappstream5 libglib2.0-bin libgstreamer1.0-0 libjpeg-dev
+  libjpeg62-turbo-dev libopenjp2-7 libpackagekit-glib2-18 libsodium-dev
+  libsodium23 libstemmer0d libxmlb2 packagekit packagekit-tools
+  python3-libcamera
+0 upgraded, 15 newly installed, 0 to remove and 0 not upgraded.
+Need to get 4,314 kB of archives.
+After this operation, 20.2 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main arm64 libstemmer0d arm64 2.2.0-4+b2 [111 kB]
+Get:2 http://deb.debian.org/debian trixie/main arm64 libxmlb2 arm64 0.3.22-1 [59.3 kB]
+Get:3 http://deb.debian.org/debian trixie/main arm64 libappstream5 arm64 1.0.5-1 [210 kB]
+Get:4 http://deb.debian.org/debian trixie/main arm64 appstream arm64 1.0.5-1 [536 kB]
+Get:5 http://deb.debian.org/debian trixie/main arm64 libglib2.0-bin arm64 2.84.4-3~deb13u5 [128 kB]
+Get:6 http://deb.debian.org/debian trixie/main arm64 libgstreamer1.0-0 arm64 1.26.2-2 [1,294 kB]
+Get:7 http://deb.debian.org/debian trixie/main arm64 libjpeg62-turbo-dev arm64 1:2.1.5-4 [293 kB]
+Get:8 http://deb.debian.org/debian trixie/main arm64 libjpeg-dev arm64 1:2.1.5-4 [72.2 kB]
+Get:9 http://deb.debian.org/debian trixie/main arm64 libopenjp2-7 arm64 2.5.3-2.1~deb13u2 [189 kB]
+Get:10 http://deb.debian.org/debian trixie/main arm64 libpackagekit-glib2-18 arm64 1.3.1-1+deb13u1 [105 kB]
+Get:11 http://deb.debian.org/debian trixie/main arm64 libsodium23 arm64 1.0.18-1+deb13u1 [120 kB]
+Get:12 http://deb.debian.org/debian trixie/main arm64 libsodium-dev arm64 1.0.18-1+deb13u1 [140 kB]
+Get:13 http://deb.debian.org/debian trixie/main arm64 packagekit arm64 1.3.1-1+deb13u1 [628 kB]
+Get:14 http://deb.debian.org/debian trixie/main arm64 packagekit-tools arm64 1.3.1-1+deb13u1 [30.3 kB]
+Get:15 http://archive.raspberrypi.com/debian trixie/main arm64 python3-libcamera arm64 0.7.2+rpt20261009-1 [396 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Fetched 4,314 kB in 1s (4,601 kB/s)
+Selecting previously unselected package libstemmer0d:arm64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 79286 files and directories currently installed.)
+Preparing to unpack .../00-libstemmer0d_2.2.0-4+b2_arm64.deb ...
+Unpacking libstemmer0d:arm64 (2.2.0-4+b2) ...
+Selecting previously unselected package libxmlb2:arm64.
+Preparing to unpack .../01-libxmlb2_0.3.22-1_arm64.deb ...
+Unpacking libxmlb2:arm64 (0.3.22-1) ...
+Selecting previously unselected package libappstream5:arm64.
+Preparing to unpack .../02-libappstream5_1.0.5-1_arm64.deb ...
+Unpacking libappstream5:arm64 (1.0.5-1) ...
+Selecting previously unselected package appstream.
+Preparing to unpack .../03-appstream_1.0.5-1_arm64.deb ...
+Unpacking appstream (1.0.5-1) ...
+Selecting previously unselected package libglib2.0-bin.
+Preparing to unpack .../04-libglib2.0-bin_2.84.4-3~deb13u5_arm64.deb ...
+Unpacking libglib2.0-bin (2.84.4-3~deb13u5) ...
+Selecting previously unselected package libgstreamer1.0-0:arm64.
+Preparing to unpack .../05-libgstreamer1.0-0_1.26.2-2_arm64.deb ...
+Unpacking libgstreamer1.0-0:arm64 (1.26.2-2) ...
+Selecting previously unselected package libjpeg62-turbo-dev:arm64.
+Preparing to unpack .../06-libjpeg62-turbo-dev_1%3a2.1.5-4_arm64.deb ...
+Unpacking libjpeg62-turbo-dev:arm64 (1:2.1.5-4) ...
+Selecting previously unselected package libjpeg-dev:arm64.
+Preparing to unpack .../07-libjpeg-dev_1%3a2.1.5-4_arm64.deb ...
+Unpacking libjpeg-dev:arm64 (1:2.1.5-4) ...
+Selecting previously unselected package libopenjp2-7:arm64.
+Preparing to unpack .../08-libopenjp2-7_2.5.3-2.1~deb13u2_arm64.deb ...
+Unpacking libopenjp2-7:arm64 (2.5.3-2.1~deb13u2) ...
+Selecting previously unselected package libpackagekit-glib2-18:arm64.
+Preparing to unpack .../09-libpackagekit-glib2-18_1.3.1-1+deb13u1_arm64.deb ...
+Unpacking libpackagekit-glib2-18:arm64 (1.3.1-1+deb13u1) ...
+Selecting previously unselected package libsodium23:arm64.
+Preparing to unpack .../10-libsodium23_1.0.18-1+deb13u1_arm64.deb ...
+Unpacking libsodium23:arm64 (1.0.18-1+deb13u1) ...
+Selecting previously unselected package libsodium-dev:arm64.
+Preparing to unpack .../11-libsodium-dev_1.0.18-1+deb13u1_arm64.deb ...
+Unpacking libsodium-dev:arm64 (1.0.18-1+deb13u1) ...
+Selecting previously unselected package packagekit.
+Preparing to unpack .../12-packagekit_1.3.1-1+deb13u1_arm64.deb ...
+Unpacking packagekit (1.3.1-1+deb13u1) ...
+Selecting previously unselected package packagekit-tools.
+Preparing to unpack .../13-packagekit-tools_1.3.1-1+deb13u1_arm64.deb ...
+Unpacking packagekit-tools (1.3.1-1+deb13u1) ...
+Selecting previously unselected package python3-libcamera.
+Preparing to unpack .../14-python3-libcamera_0.7.2+rpt20261009-1_arm64.deb ...
+Unpacking python3-libcamera (0.7.2+rpt20261009-1) ...
+Setting up libsodium23:arm64 (1.0.18-1+deb13u1) ...
+Setting up libxmlb2:arm64 (0.3.22-1) ...
+Setting up libglib2.0-bin (2.84.4-3~deb13u5) ...
+Setting up libpackagekit-glib2-18:arm64 (1.3.1-1+deb13u1) ...
+Setting up libjpeg62-turbo-dev:arm64 (1:2.1.5-4) ...
+Setting up libsodium-dev:arm64 (1.0.18-1+deb13u1) ...
+Setting up python3-libcamera (0.7.2+rpt20261009-1) ...
+Setting up libopenjp2-7:arm64 (2.5.3-2.1~deb13u2) ...
+Setting up libstemmer0d:arm64 (2.2.0-4+b2) ...
+Setting up libgstreamer1.0-0:arm64 (1.26.2-2) ...
+Setcap worked! gst-ptp-helper is not suid!
+Setting up libjpeg-dev:arm64 (1:2.1.5-4) ...
+Setting up libappstream5:arm64 (1.0.5-1) ...
+Setting up appstream (1.0.5-1) ...
+✔ Metadata cache was updated successfully.
+Setting up packagekit (1.3.1-1+deb13u1) ...
+Created symlink '/etc/systemd/user/sockets.target.wants/pk-debconf-helper.socket' → '/usr/lib/systemd/user/pk-debconf-helper.socket'.
+Setting up packagekit-tools (1.3.1-1+deb13u1) ...
+Processing triggers for man-db (2.13.1-1) ...
+Processing triggers for dbus (1.16.2-2) ...
+Processing triggers for libc-bin (2.41-12+rpt1+deb13u4) ...
+
+
+###### Installing python virtual environment...
+created virtual environment CPython3.13.5.final.0-64 in 87ms
+  creator CPython3Posix(dest=/home/brandon/moonraker-env, clear=False, no_vcs_ignore=False, global=False)
+  seeder FromAppData(download=False, pip=bundle, via=copy, app_data_dir=/home/brandon/.local/share/virtualenv)
+    added seed packages: pip==25.1.1
+  activators BashActivator,CShellActivator,FishActivator,NushellActivator,PowerShellActivator,PythonActivator
+Using pip install command '/home/brandon/moonraker-env/bin/pip install'...
+
+
+###### Installing Moonraker python dependencies...
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Looking in links: /home/brandon/moonraker/scripts/python_wheels
+Collecting tornado<=6.5.8,>=6.2.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 3))
+  Downloading tornado-6.5.8-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (2.8 kB)
+Collecting pyserial==3.4 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 4))
+  Using cached https://www.piwheels.org/simple/pyserial/pyserial-3.4-py2.py3-none-any.whl.metadata (1.6 kB)
+Collecting pillow<=12.3.0,>=9.5.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 5))
+  Downloading pillow-12.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl.metadata (9.1 kB)
+Collecting streaming-form-data<=2.1.0,>=1.11.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6))
+  Downloading streaming_form_data-2.1.0.tar.gz (150 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting distro==1.9.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 7))
+  Downloading https://www.piwheels.org/simple/distro/distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+Collecting inotify-simple==2.0.1 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 8))
+  Downloading https://www.piwheels.org/simple/inotify-simple/inotify_simple-2.0.1-py3-none-any.whl.metadata (4.7 kB)
+Collecting libnacl==2.1.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 9))
+  Downloading https://www.piwheels.org/simple/libnacl/libnacl-2.1.0-py3-none-any.whl.metadata (3.0 kB)
+Collecting paho-mqtt==2.1.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 10))
+  Downloading https://www.piwheels.org/simple/paho-mqtt/paho_mqtt-2.1.0-py3-none-any.whl.metadata (23 kB)
+Collecting zeroconf<=0.150.0,>=0.131.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 11))
+  Downloading zeroconf-0.150.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (6.6 kB)
+Collecting preprocess-cancellation==0.2.1 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 12))
+  Downloading preprocess_cancellation-0.2.1-py3-none-any.whl.metadata (3.6 kB)
+Collecting jinja2==3.1.6 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 13))
+  Downloading https://www.piwheels.org/simple/jinja2/jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting dbus-fast<=5.0.22,>=2.21.3 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 14))
+  Downloading dbus_fast-5.0.22-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (11 kB)
+Collecting apprise<=1.13.0,>=1.9.3 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/apprise/apprise-1.13.0-py3-none-any.whl.metadata (62 kB)
+Collecting ldap3==2.9.1 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 16))
+  Downloading https://www.piwheels.org/simple/ldap3/ldap3-2.9.1-py3-none-any.whl.metadata (5.4 kB)
+Collecting python-periphery==2.4.1 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 17))
+  Downloading https://www.piwheels.org/simple/python-periphery/python_periphery-2.4.1-py2.py3-none-any.whl.metadata (1.5 kB)
+Collecting importlib_metadata<=9.0.0,>=6.7.0 (from -r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 18))
+  Downloading https://www.piwheels.org/simple/importlib-metadata/importlib_metadata-9.0.0-py3-none-any.whl.metadata (4.5 kB)
+Collecting MarkupSafe>=2.0 (from jinja2==3.1.6->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 13))
+  Downloading markupsafe-3.0.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (2.7 kB)
+Collecting pyasn1>=0.4.6 (from ldap3==2.9.1->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 16))
+  Downloading https://www.piwheels.org/simple/pyasn1/pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+Collecting smart-open>=7.0.5 (from streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6))
+  Downloading https://www.piwheels.org/simple/smart-open/smart_open-8.0.4-py3-none-any.whl.metadata (25 kB)
+Collecting aiofiles>=23.2.1 (from streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6))
+  Downloading https://www.piwheels.org/simple/aiofiles/aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+Collecting ifaddr>=0.1.7 (from zeroconf<=0.150.0,>=0.131.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 11))
+  Downloading https://www.piwheels.org/simple/ifaddr/ifaddr-0.2.0-py3-none-any.whl.metadata (4.9 kB)
+Collecting requests (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/requests/requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting requests-oauthlib (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/requests-oauthlib/requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+Collecting click>=5.0 (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/click/click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting markdown (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading markdown-3.11.2-py3-none-any.whl.metadata (5.1 kB)
+Collecting PyYAML (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading pyyaml-6.0.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (2.4 kB)
+Collecting certifi (from apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/certifi/certifi-2026.10.18-py3-none-any.whl.metadata (2.5 kB)
+Collecting zipp>=3.20 (from importlib_metadata<=9.0.0,>=6.7.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 18))
+  Downloading https://www.piwheels.org/simple/zipp/zipp-4.1.1-py3-none-any.whl.metadata (3.6 kB)
+Collecting wrapt (from smart-open>=7.0.5->streaming-form-data<=2.1.0,>=1.11.0->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 6))
+  Downloading wrapt-2.5.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (7.6 kB)
+Collecting charset_normalizer<4,>=2 (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading charset_normalizer-3.5.2-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (46 kB)
+Collecting idna<4,>=2.5 (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/idna/idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+Collecting urllib3<3,>=1.26 (from requests->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/urllib3/urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting oauthlib>=3.0.0 (from requests-oauthlib->apprise<=1.13.0,>=1.9.3->-r /home/brandon/moonraker/scripts/moonraker-requirements.txt (line 15))
+  Downloading https://www.piwheels.org/simple/oauthlib/oauthlib-4.0.0-py3-none-any.whl.metadata (8.6 kB)
+Using cached https://www.piwheels.org/simple/pyserial/pyserial-3.4-py2.py3-none-any.whl (193 kB)
+Downloading https://www.piwheels.org/simple/distro/distro-1.9.0-py3-none-any.whl (20 kB)
+Downloading https://www.piwheels.org/simple/inotify-simple/inotify_simple-2.0.1-py3-none-any.whl (7.4 kB)
+Downloading https://www.piwheels.org/simple/libnacl/libnacl-2.1.0-py3-none-any.whl (21 kB)
+Downloading https://www.piwheels.org/simple/paho-mqtt/paho_mqtt-2.1.0-py3-none-any.whl (67 kB)
+Downloading preprocess_cancellation-0.2.1-py3-none-any.whl (18 kB)
+Downloading https://www.piwheels.org/simple/jinja2/jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading https://www.piwheels.org/simple/ldap3/ldap3-2.9.1-py3-none-any.whl (419 kB)
+Downloading https://www.piwheels.org/simple/python-periphery/python_periphery-2.4.1-py2.py3-none-any.whl (36 kB)
+Downloading tornado-6.5.8-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (451 kB)
+Downloading pillow-12.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 5.3 MB/s eta 0:00:00
+Downloading zeroconf-0.150.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 3.0 MB/s eta 0:00:00
+Downloading dbus_fast-5.0.22-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (798 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 798.5/798.5 kB 10.2 MB/s eta 0:00:00
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /simple/apprise/apprise-1.13.0-py3-none-any.whl
+Downloading https://www.piwheels.org/simple/apprise/apprise-1.13.0-py3-none-any.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 4.0 MB/s eta 0:00:00
+Downloading https://www.piwheels.org/simple/importlib-metadata/importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
+Downloading https://www.piwheels.org/simple/aiofiles/aiofiles-25.1.0-py3-none-any.whl (14 kB)
+Downloading https://www.piwheels.org/simple/click/click-8.5.0-py3-none-any.whl (125 kB)
+Downloading https://www.piwheels.org/simple/ifaddr/ifaddr-0.2.0-py3-none-any.whl (12 kB)
+Downloading markupsafe-3.0.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (24 kB)
+Downloading https://www.piwheels.org/simple/pyasn1/pyasn1-0.6.4-py3-none-any.whl (84 kB)
+Downloading https://www.piwheels.org/simple/smart-open/smart_open-8.0.4-py3-none-any.whl (73 kB)
+Downloading https://www.piwheels.org/simple/zipp/zipp-4.1.1-py3-none-any.whl (10 kB)
+Downloading https://www.piwheels.org/simple/certifi/certifi-2026.10.18-py3-none-any.whl (134 kB)
+Downloading markdown-3.11.2-py3-none-any.whl (114 kB)
+Downloading pyyaml-6.0.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (767 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 767.1/767.1 kB 9.7 MB/s eta 0:00:00
+Downloading https://www.piwheels.org/simple/requests/requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.5.2-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (244 kB)
+Downloading https://www.piwheels.org/simple/idna/idna-3.20-py3-none-any.whl (69 kB)
+Downloading https://www.piwheels.org/simple/urllib3/urllib3-2.8.0-py3-none-any.whl (135 kB)
+Downloading https://www.piwheels.org/simple/requests-oauthlib/requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+Downloading https://www.piwheels.org/simple/oauthlib/oauthlib-4.0.0-py3-none-any.whl (159 kB)
+Downloading wrapt-2.5.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (248 kB)
+Building wheels for collected packages: streaming-form-data
+  Building wheel for streaming-form-data (pyproject.toml): started
+  Building wheel for streaming-form-data (pyproject.toml): finished with status 'done'
+  Created wheel for streaming-form-data: filename=streaming_form_data-2.1.0-cp313-cp313-linux_aarch64.whl size=574154 sha256=0c9ec32398f0121e485f5eaa9f91cb3fa5febf0c0599819c605d8c577eec958b
+  Stored in directory: /home/brandon/.cache/pip/wheels/59/47/b5/e05505f30ce0ea00965cf37d89791d84889f7423e099d10abf
+Successfully built streaming-form-data
+Installing collected packages: python-periphery, pyserial, ifaddr, zipp, zeroconf, wrapt, urllib3, tornado, PyYAML, pyasn1, preprocess-cancellation, pillow, paho-mqtt, oauthlib, MarkupSafe, markdown, libnacl, inotify-simple, idna, distro, dbus-fast, click, charset_normalizer, certifi, aiofiles, smart-open, requests, ldap3, jinja2, importlib_metadata, streaming-form-data, requests-oauthlib, apprise
+
+Successfully installed MarkupSafe-3.0.4 PyYAML-6.0.3 aiofiles-25.1.0 apprise-1.13.0 certifi-2026.10.18 charset_normalizer-3.5.2 click-8.5.0 dbus-fast-5.0.22 distro-1.9.0 idna-3.20 ifaddr-0.2.0 importlib_metadata-9.0.0 inotify-simple-2.0.1 jinja2-3.1.6 ldap3-2.9.1 libnacl-2.1.0 markdown-3.11.2 oauthlib-4.0.0 paho-mqtt-2.1.0 pillow-12.3.0 preprocess-cancellation-0.2.1 pyasn1-0.6.4 pyserial-3.4 python-periphery-2.4.1 requests-2.34.2 requests-oauthlib-2.0.0 smart-open-8.0.4 streaming-form-data-2.1.0 tornado-6.5.8 urllib3-2.8.0 wrapt-2.5.1 zeroconf-0.150.0 zipp-4.1.1
+
+
+###### Initializing Moonraker Data Path at /home/brandon/printer_data
+
+
+###### Writing Config File /home/brandon/printer_data/config/moonraker.conf:
+
+# Moonraker Configuration File
+
+[server]
+host: 0.0.0.0
+port: 7125
+# Make sure the klippy_uds_address is correct.  It is initialized
+# to the default address.
+klippy_uds_address: /tmp/klippy_uds
+
+[machine]
+provider: systemd_dbus
+
+
+
+###### Creating systemd environment file /home/brandon/printer_data/systemd/moonraker.env...
+
+
+###### Installing systemd service unit...
+Created symlink '/etc/systemd/system/multi-user.target.wants/moonraker.service' → '/etc/systemd/system/moonraker.service'.
+
+
+###### Installing PolKit Rules
+
+
+###### PolicyKit Version 126 Detected
+
+
+###### Installing PolicyKit Rules to /usr/share/polkit-1/rules.d/moonraker.rules...
+
+
+###### Launching Moonraker API Server...
++ sudo apt-get install -y nginx
+E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 10937 (apt-get)
+E: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is another process using it?

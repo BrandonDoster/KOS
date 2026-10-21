@@ -1,0 +1,35 @@
+{
+ "label": "kos",
+ "phase": 2,
+ "date": "2026-10-19",
+ "host": "Raspberry Pi Compute Module 5 Lite Rev 1.0, 4 GB, SD32G 32 GB SDHC",
+ "hw_note": "BTT Manta M5P (STM32G0B1 USB-CAN bridge, CAN 1M); LDO Nitehawk 36 USB; [mcu host]; wired Ethernet; Sindri; image kos-cm5-20261019 pm",
+ "gcode": "bench/fixtures/flexible+railway+track+brio+short+long_PLA_1h25m.gcode",
+ "gcode_sha256": "dd546acdfec2f18aced3b03611a2d436ca8e78c58c254e8fb6e951604214d2d4",
+ "job": {"status": "completed", "start": "11:28:51", "end": "12:53:51", "print_min": 82.0, "total_min": 85.0, "bytes_read": 5772545},
+ "klippy_log": {
+  "stats_samples": 5097,
+  "timer_too_close": 0,
+  "mcu_shutdowns": 0,
+  "print_stall": 0,
+  "sysload": {"median": 0.03, "p99": 0.38, "max": 0.63},
+  "klippy_cputime_s": 97.8,
+  "klippy_cpu_pct_of_one_core": 1.9,
+  "buffer_time_s": {"median": 1.176, "p99": 1.653, "max": 6.515},
+  "memavail_kb_median": 3819000,
+  "soc_temp_max_c": 69.4,
+  "mcu": {"link": "CAN via USB bridge", "srtt_ms": {"median": 2, "p99": 4, "max": 5}, "rttvar_ms_max": 3, "bytes_written": 33565845, "bytes_retransmit": 0, "mcu_awake_median": 0.268},
+  "nitehawk": {"link": "USB", "srtt_ms": {"median": 1, "p99": 1, "max": 2}, "rttvar_ms_max": 2, "bytes_written": 7661731, "bytes_retransmit": 0, "mcu_awake_median": 0.005},
+  "host": {"link": "Linux process MCU", "srtt_ms": {"median": 0, "max": 1}, "bytes_written": 31080, "bytes_retransmit": 0}
+ },
+ "log_writes_during_print": {
+  "klippy_log_bytes": 7910000,
+  "klippy_log_mb_per_h": 5.59,
+  "journal_bytes": 16183,
+  "journal_lines": 133,
+  "moonraker_log_bytes": 1150,
+  "var_log_bytes_since_boot": 39,
+  "note": "klippy.log is on the SD card; journal and /var/log are in RAM on KOS. klippy.log is ~99.8% of log writing during a print."
+ },
+ "_method": "Parsed from klippy.log between 'Starting SD card print' and 'Exiting SD card print'; job times from Moonraker history; journal/moonraker.log bytes limited to the job's start-end window."
+}

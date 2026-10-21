@@ -1,0 +1,57 @@
+{
+ "boot_systemd": "Startup finished in 3.343s (kernel) + 10.886s (userspace) = 14.230s",
+ "cmdline": "root=LABEL=KOS-ROOT rootwait rootfstype=ext4 splash=verbose console=ttyS0,115200 console=tty1 consoleblank=0 loglevel=1 ubootpart=00000000-02 usb-storage.quirks=0x2537:0x1066:u,0x2537:0x1068:u isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d",
+ "moonraker_get_directory_s": {
+  "first": 3.360653,
+  "median_warm": 3.3559704999999997,
+  "all": [
+   3.360653,
+   3.323025,
+   3.363527,
+   3.376798,
+   3.348414
+  ]
+ },
+ "footprint_clean": false,
+ "governor": "performance",
+ "hw_cpu_max_mhz": 1512,
+ "hw_model": "BigTreeTech CB1",
+ "hw_note": "BTT CB1 on Manta M5P; Nitehawk 36 USB; [mcu host]; wired; Sindri",
+ "hw_ram_mb": 968,
+ "hw_sd": "mmcblk0 SD32G manfid=0x000027 oemid=0x5048 date=08/2020 28 GiB",
+ "isolated": 3,
+ "kernel": "7.2.8-edge-sunxi64",
+ "klipper": "v0.13.0-809-gc63b2951",
+ "klippy_cpus": 3,
+ "klippy_ready_s": 23.5,
+ "klippy_state": "ready",
+ "label": "kos",
+ "lat_idle": {
+  "samples": 60000,
+  "p50_us": 5,
+  "p99_us": 38,
+  "p999_us": 58,
+  "max_us": 73
+ },
+ "lat_load": {
+  "samples": 60000,
+  "p50_us": 23,
+  "p99_us": 81,
+  "p999_us": 121,
+  "max_us": 226
+ },
+ "mainsail": "v2.19.0",
+ "mem_available_mb": 751,
+ "mem_used_mb": 216,
+ "moonraker": "v0.11.0-3-g9e676eb",
+ "moonraker_loop_blocked": 1,
+ "moonraker_metadata_files": 1234,
+ "moonraker_metadata_s": 1081,
+ "os": "Debian GNU/Linux 13 (trixie)",
+ "packages": 345,
+ "processes": 157,
+ "rootfs_used_mb": 1898,
+ "sd_write_mb_per_h_idle": 2.3,
+ "sd_write_mb_per_h_since_boot": 28.2,
+ "services_running": 20
+}
