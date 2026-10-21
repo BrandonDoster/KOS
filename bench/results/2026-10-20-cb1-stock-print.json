@@ -1,5 +1,5 @@
 {
- "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window (journalctl --since/--until). sd_writes_since_boot covers boot + print only (no Phase 1 bench in this boot, unlike the CM5 runs).",
+ "_method": "bench/scripts/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window (journalctl --since/--until). sd_writes_since_boot covers boot + print only (no Phase 1 bench in this boot, unlike the CM5 runs).",
  "date": "2026-10-20",
  "phase": 2,
  "label": "stock",

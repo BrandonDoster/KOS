@@ -1,5 +1,5 @@
 {
- "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window. sd_writes_since_boot covers the boot after the last warm reboot + Phase 1 bench (incl. writing and indexing the 1,234-file fixture) + print, so not comparable to the stock rows (boot + print only).",
+ "_method": "bench/scripts/print_stats.py on klippy.log; job times from Moonraker history; journal bytes limited to the job window. sd_writes_since_boot covers the boot after the last warm reboot + Phase 1 bench (incl. writing and indexing the 1,234-file fixture) + print, so not comparable to the stock rows (boot + print only).",
  "date": "2026-10-21",
  "phase": 2,
  "label": "kos",

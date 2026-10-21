@@ -110,5 +110,5 @@
  },
  "sd_writes_since_boot_mb": 200.4,
  "uptime_h": 2.37,
- "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal/moonraker/nginx bytes limited to the job window."
+ "_method": "bench/scripts/print_stats.py on klippy.log; job times from Moonraker history; journal/moonraker/nginx bytes limited to the job window."
 }

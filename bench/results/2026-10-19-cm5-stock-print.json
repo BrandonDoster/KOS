@@ -112,5 +112,5 @@
  },
  "sd_writes_since_boot_mb": 634.2,
  "uptime_h": 2.21,
- "_method": "tests/print_stats.py on klippy.log; job times from Moonraker history; journal/moonraker/nginx bytes limited to the job window. sd_writes_since_boot covers boot + Phase 1 bench + print, same sequence as the KOS run (139 MB in 1.92 h) but not an identical window."
+ "_method": "bench/scripts/print_stats.py on klippy.log; job times from Moonraker history; journal/moonraker/nginx bytes limited to the job window. sd_writes_since_boot covers boot + Phase 1 bench + print, same sequence as the KOS run (139 MB in 1.92 h) but not an identical window."
 }
