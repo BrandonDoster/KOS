@@ -14,7 +14,7 @@ The name comes from Kos, the Greek island, as a nod to Klipper.
 > **Status: unreleased, no download yet.** Build the image from source (see [Building](#building)).
 > Both images boot and print on real hardware: a CM5 Lite (4 GB) and a CB1 (1 GB), each on a BTT Manta M5P carrier.
 > The CM4 also boots from the CM5 image in theory, but nobody has tested it. Details of what is verified:
-> [PLAN.md §21](PLAN.md#21-implementation-status) and [BENCHMARKS.md](BENCHMARKS.md).
+> [plan §21](docs/plan.md#21-implementation-status) and [benchmarks](docs/benchmarks.md).
 
 ## Supported hardware
 
@@ -38,7 +38,7 @@ The full notes are in [docs/cm5-on-manta.md](docs/cm5-on-manta.md). On a CM5 wit
 | Tuning | Klippy pinned to its own core (`isolcpus=3`), `performance` governor, IRQs moved off that core, zram swap, logs in RAM |
 | Not included | Desktop or KlipperScreen, Fluidd, camera stack, MCU firmware toolchains, A/B root, OTA updates |
 
-The root filesystem is about 1.2 GB with 310 to 320 packages (measured: [BENCHMARKS.md](BENCHMARKS.md)).
+The root filesystem is about 1.2 GB with 310 to 320 packages (measured: [benchmarks](docs/benchmarks.md)).
 The image file is about 3.5 GB before compression.
 
 ## Quick start
@@ -102,7 +102,7 @@ Paths that point to another user's home (`/home/pi/...`) are rewritten to `/home
 ### Gcode archiving
 
 A gcode folder with thousands of files makes the web UI slow, and can drop its connection. On a CB1 with 1,234 files
-in the root folder, one listing took 4.4 s inside Moonraker ([PLAN.md §17](PLAN.md#17-gcode-library-management--archive-printed-files)).
+in the root folder, one listing took 4.4 s inside Moonraker ([plan §17](docs/plan.md#17-gcode-library-management--archive-printed-files)).
 KOS moves each successfully printed file into `Printed/YYYY/MM/`, through Moonraker's own move API, so every folder
 stays small.
 
@@ -124,7 +124,7 @@ network fails. Anyone with physical access to the printer has a root shell.
 
 Measured on one printer, with the same carrier (BTT Manta M5P), SD card, printer config and Klipper and Moonraker
 versions. `stock` is the vendor OS plus KIAUH. `stock-tuned` is `stock` with KOS's realtime tuning copied onto it.
-Single runs; see [BENCHMARKS.md](BENCHMARKS.md) for the method, the raw JSON and all caveats.
+Single runs; see [benchmarks](docs/benchmarks.md) for the method, the raw JSON and all caveats.
 
 **Raspberry Pi CM5 Lite, 4 GB** (stock: Raspberry Pi OS Lite, trixie)
 
@@ -150,14 +150,14 @@ Every install, on both boards, printed the 85-minute benchmark file with 0 timer
 What this shows:
 
 - On the CM5, the low jitter comes from the tuning. Copy it onto Raspberry Pi OS with
-  [tests/stock_tune.sh](tests/stock_tune.sh) and you get the same numbers. The base image buys faster boot and a
+  [bench/scripts/stock_tune.sh](bench/scripts/stock_tune.sh) and you get the same numbers. The base image buys faster boot and a
   much smaller root filesystem.
 - On the CB1, the base image also matters for jitter. Tuning BTT's image closes about half the gap.
 
 \*On 1 GB boards, a pinned realtime thread can stall for 5-30 ms when memory runs low. This happens on every CB1 OS
 tested, KOS and BTT's image alike, and it is a kernel memory-management effect. It does not affect prints, because
 Klipper plans motion about 1 s ahead. Full analysis:
-[BENCHMARKS.md, "Latency stalls on 1 GB boards"](BENCHMARKS.md#latency-stalls-on-1-gb-boards-k-83-2026-10-21).
+[benchmarks, "Latency stalls on 1 GB boards"](docs/benchmarks.md#latency-stalls-on-1-gb-boards-2026-10-21).
 
 ## Building
 
@@ -188,17 +188,16 @@ sh tests/inspect_image.sh out/kos-cb1-*.img
 
 | Path | What |
 |---|---|
-| `PLAN.md` | Design document: every decision, the reasons, open questions, implementation status |
-| `BENCHMARKS.md` | Measured results, method and raw data links |
-| `TEARDOWN.md` | Notes on Mellow's FlyOS-Fast, which this project started from |
 | `build/` | `build.sh` (host wrapper), `in-container.sh` (mmdebstrap), `customize.sh` (chroot), `mkimage.py` (partitioning without loop devices) |
 | `build/boards/{cb1,cm5}/` | The only board-specific code: kernel packages, boot files, partition layout |
 | `build/config-partition/` | The `kos.conf` template shipped on the KOS partition |
 | `overlay/` | Files copied into the image as-is: systemd units, nginx, fstab, and the `kos-*` tools |
-| `tests/` | No-hardware checks, plus the on-device benchmark scripts |
-| `bench/` | Benchmark print file and raw results |
-| `docs/` | Hardware notes (CM5 on Manta), MCU firmware build records, serial logs, README images |
-| `analysis/` | FlyOS-Fast teardown output: extracted vendor scripts, units, configs and patches |
+| `tests/` | No-hardware checks (`run.sh`, image round-trip and inspection); `tests/device/` runs on a booted KOS box |
+| `bench/` | Benchmark scripts (`bench/scripts/`), the benchmark print file and raw results |
+| `docs/plan.md` | Design document: every decision, the reasons, open questions, implementation status |
+| `docs/benchmarks.md` | Measured results, method and raw data links |
+| `docs/teardown/` | Notes on Mellow's FlyOS-Fast, which this project started from: inventory, file listings, and descriptions of the vendor files |
+| `docs/` | Also hardware notes (CM5 on Manta), MCU firmware build records, serial logs, README images |
 
 ## Known limitations
 
@@ -224,7 +223,7 @@ KOS builds on the work of others. None of them is affiliated with this project.
   the base system and the image builder.
 - **Mellow's FlyOS-Fast**: no code used (it is 32-bit Buildroot), but its design was the starting point: the settings
   file on a FAT partition, the CAN network files, the mount options and the realtime pinning. See
-  [TEARDOWN.md](TEARDOWN.md).
+  [docs/teardown/](docs/teardown/README.md).
 - The **[mainline Armbian on CB1](https://github.com/armbian/build/pull/9584)** community reports, for the CAN
   queue-length and Wi-Fi power-save findings.
 
@@ -238,6 +237,6 @@ service, you must make your modified source available to its users.
 
 This covers the build system (`build/`), the files in `overlay/`, and the documentation. Klipper, Moonraker,
 Mainsail and the other projects under Credits keep their own licenses; they are downloaded at build time, not stored
-here. `analysis/` contains notes on a third-party image, not redistributable code. The benchmark print in
+here. `docs/teardown/` contains notes on a third-party image, not its code. The benchmark print in
 `bench/fixtures/` is a third-party model under CC BY-NC-SA, not AGPL; see
 [bench/fixtures/LICENSE.md](bench/fixtures/LICENSE.md).

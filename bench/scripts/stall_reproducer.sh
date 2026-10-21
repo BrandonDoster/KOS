@@ -1,7 +1,7 @@
 #!/bin/bash
-# K-83 stall reproducer (BENCHMARKS.md "Latency stalls on 1 GB boards"): catch a stall and the kernel stack where
+# Stall reproducer (docs/benchmarks.md "Latency stalls on 1 GB boards"): catch a stall and the kernel stack where
 # cyclictest blocks (state D). Works on KOS (user klipper) and stock images (user biqu/pi); needs rt-tests + stress-ng.
-#   sudo bash tests/stall_reproducer.sh <label> <runs>      results in ~/stall-<label>/
+#   sudo bash bench/scripts/stall_reproducer.sh <label> <runs>      results in ~/stall-<label>/
 # Before each run: write 300 MB of fresh data (left dirty, like apt in the bench). Then the bench's load +
 # cyclictest; core-3 events go to the trace buffer and cyclictest -b 3000 stops tracing at the first
 # wakeup later than 3 ms. Stops at the first caught run.

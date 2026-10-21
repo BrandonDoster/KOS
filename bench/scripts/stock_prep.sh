@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bring a stock install (Raspberry Pi OS Lite / Armbian minimal + KIAUH) to the benchmark baseline in BENCHMARKS.md:
+# Bring a stock install (Raspberry Pi OS Lite / Armbian minimal + KIAUH) to the benchmark baseline in docs/benchmarks.md:
 # the same Klipper and Moonraker commits as the KOS image under test, the printer's own config, and CAN plus the
 # Klipper host MCU set up the way upstream's docs describe (docs/CANBUS.md, docs/RPi_microcontroller.md).
 # Run as the user KIAUH installed under, after KIAUH has installed Klipper, Moonraker, Mainsail (+ mainsail-config):

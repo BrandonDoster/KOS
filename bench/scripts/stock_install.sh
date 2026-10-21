@@ -1,5 +1,5 @@
 #!/bin/bash
-# The "stock" baseline install for BENCHMARKS.md, scripted instead of clicked through KIAUH: what KIAUH runs underneath.
+# The "stock" baseline install for docs/benchmarks.md, scripted instead of clicked through KIAUH: what KIAUH runs underneath.
 # Raspberry Pi OS Lite / Armbian minimal, fully updated, then Klipper (scripts/install-debian.sh), Moonraker
 # (scripts/install-moonraker.sh), Mainsail + mainsail-config behind nginx the way Mainsail's docs set it up
 # (access and error logs on, in /var/log/nginx). Pin to the KOS commits and import the config with stock_prep.sh after.

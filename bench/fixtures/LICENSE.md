@@ -21,6 +21,6 @@ The files in this folder are **not** covered by the repository's AGPL-3.0 licens
 This G-code is an adaptation of that model and is shared under the remix's license, CC BY-NC-SA: you may copy and
 adapt it for non-commercial purposes, with attribution to the creators above, and must share adaptations under the
 same license. It is used here only as a fixed, repeatable print for the benchmarks in
-[BENCHMARKS.md](../../BENCHMARKS.md).
+[docs/benchmarks.md](../../docs/benchmarks.md).
 
 It is not part of any KOS image and is not needed to build or run KOS.

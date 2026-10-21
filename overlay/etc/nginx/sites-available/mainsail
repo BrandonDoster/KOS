@@ -1,4 +1,4 @@
-# Upstream nginx site for Mainsail/Fluidd (analysis/flyos-glue/web/sites-available/fluidd), path and log locations adjusted.
+# Upstream nginx site for Mainsail/Fluidd (as FlyOS ships it, see docs/teardown/flyos-glue.md#web-server), path and log locations adjusted.
 server {
     listen 80 default_server;
     listen [::]:80 default_server;

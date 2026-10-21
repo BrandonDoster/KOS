@@ -1,4 +1,4 @@
-# Source artifact and everything extracted from it — regenerable, see TEARDOWN.md
+# Source artifact and everything extracted from it — regenerable, see docs/teardown/README.md
 *.7z
 *.img
 parts/

@@ -4,9 +4,9 @@ Reverse-engineering notes for Mellow's **FlyOS-Fast v1.3.8 (Allwinner H3)** imag
 
 Mellow publishes no build docs, no Buildroot tree, and no kernel source for this image. Everything here was recovered from the shipped `.img`.
 
-This is the archived research phase of the project. The design it fed into is [`PLAN.md`](PLAN.md); the image being built is described in [`README.md`](README.md).
+This is the archived research phase of the project. The design it fed into is [`docs/plan.md`](../plan.md); the image being built is described in the [project README](../../README.md).
 
-**Start here:** [`analysis/FlyOS-Fast-1.3.8-inventory.md`](analysis/FlyOS-Fast-1.3.8-inventory.md) — the full inventory: partition layout, boot chain, base distro evidence, kernel, package set, per-app patch analysis, network surface, and two rebuild paths.
+**Start here:** [`FlyOS-Fast-1.3.8-inventory.md`](FlyOS-Fast-1.3.8-inventory.md) — the full inventory: partition layout, boot chain, base distro evidence, kernel, package set, per-app patch analysis, network surface, and two rebuild paths.
 
 ---
 
@@ -24,20 +24,19 @@ The `.7z` is not tracked here (1.1 GB). Get it from Mellow's download page or co
 
 ## Repository layout
 
-Small, worth keeping / committing:
+Small, worth keeping / committing (all in `docs/teardown/`):
 
 | Path | What it is |
 |---|---|
-| `TEARDOWN.md` | this file |
-| `analysis/FlyOS-Fast-1.3.8-inventory.md` | the main report |
-| `analysis/klipper-vendor.patch` | Klipper diff vs upstream `02cfc65e` (28 files, 89 hunks) |
-| `analysis/moonraker-vendor.patch` | Moonraker diff vs upstream `9008485` (4 files) |
-| `analysis/klipperscreen-vendor.patch` | KlipperScreen diff vs upstream `3fab8d60` (39 files, locales excluded) |
-| `analysis/userland-binaries.txt` | 979 binaries from `/usr/bin` + `/usr/sbin` |
-| `analysis/shared-libs.txt` | 556 versioned shared libraries |
-| `analysis/python-site-packages.txt` | 154 site-packages entries |
-| `analysis/flyos-glue/` | the vendor's own files, copied out verbatim (81 files, see below) |
+| `README.md` | this file |
+| `FlyOS-Fast-1.3.8-inventory.md` | the main report |
+| `flyos-glue.md` | what each of the vendor's own files does, and what the three vendor patches change (see below) |
+| `userland-binaries.txt` | 979 binaries from `/usr/bin` + `/usr/sbin` |
+| `shared-libs.txt` | 556 versioned shared libraries |
+| `python-site-packages.txt` | 154 site-packages entries |
 | `rootfs-list.txt` | all 44,555 paths in the root filesystem |
+
+The vendor's files and the three patches (Klipper vs upstream `02cfc65e`, 28 files, 89 hunks; Moonraker vs `9008485`, 4 files; KlipperScreen vs `3fab8d60`, 39 files, locales excluded) are not in this repository. KOS does not ship vendor code; `flyos-glue.md` describes them instead, and both can be regenerated from the image with the steps below.
 
 Large, regenerable, do not commit (≈8.4 GB total):
 
@@ -45,22 +44,11 @@ Large, regenerable, do not commit (≈8.4 GB total):
 FlyOS-Fast-H3-v1.3.8.img   parts/   rootfs/   boot0/   boot1/   env4/
 ```
 
-Those six paths are in `.gitignore`; the tracked analysis is ~1.3 MB and stands on its own without them.
+Those six paths are in `.gitignore`; the tracked notes stand on their own without them.
 
-## `analysis/flyos-glue/` — the vendor's own code, extracted
+## The vendor's own files
 
-These are the parts that are *not* upstream anything. They survive deleting the 5.4 GB extract, so the repo stays useful on its own.
-
-| Path | Contents |
-|---|---|
-| `scripts/` | all 21 FlyOS shell scripts: `flyos-init` (the pre-systemd overlay/resize init — this is the whole appliance trick), `flyos-config`, `flyos-firstrun`, `flyos-mounts`, `flyos-netinit`, `flyos-caddy`, `flyos-nginx`, `flyos-display-init`, `flyos-init-{zram,swap,hard,venv}`, `flyos-resizefs`, `flyos-klippy-guardian`, `flyos-psplash`, etc. |
-| `systemd/` | 32 units: `klipper.service`, `moonraker.service`, `klipperscreen.service`, `klipper-mcu.service`, `crowsnest.service`, `moon2uart.service`, `ttyd.service`, `nginx.service`, all `flyos-*` units, the four DSF/Duet units. Includes two shipped-but-disabled units: `flyos-klippy-guardian.service.disable`, `flyos-x-start.service.disable`. |
-| `web/` | `nginx.conf`, `sites-available/{default,fluidd,mainsail}`, `conf.d/{common_vars,upstreams}.conf`, `Caddyfile-f`, `Caddyfile-m` |
-| `config/` | shipped `config.txt` (the user-facing provisioning surface), `printer.cfg`, `moonraker.conf`, `KlipperScreen.conf`, `crowsnest.conf`, `fluidd.cfg`, `mainsail.cfg`, `plr.cfg` |
-| `boot/` | `boot.scr.txt` (U-Boot script recovered with `strings`), `dtb-overlays.txt` (42 `sun8i-h3-*.dtbo` names) |
-| `klipper-added/` | `power_loss_resume.py`, `filament_blockage_detection.py` + `.c`, `led_effect.py` |
-| `moonraker-added/` | `fly_lcd.py`, `network.py` |
-| `klipperscreen-added/` | `fly_lcd.py`, `network_info.py`, `ota_client.py`, `ota_overlay.py` |
+These are the parts of the image that are *not* upstream anything: 21 shell scripts (most in `/usr/lib/flyos/`), 32 systemd units (two shipped disabled), udev rules, CAN and Ethernet network files, nginx and Caddy configs, the shipped `config.txt` and other default configs, the U-Boot script and the list of device-tree overlays, and the files the vendor added to Klipper, Moonraker and KlipperScreen. [`flyos-glue.md`](flyos-glue.md) describes each one: where it lived in the image, what it does, and its licence header if it has one.
 
 ## Reproducing the extraction on another machine
 
@@ -94,7 +82,7 @@ git -C moonraker     checkout 9008485    # 2026-05-07
 git -C KlipperScreen checkout 3fab8d60   # 2026-05-13
 ```
 
-Then diff each upstream tree against `rootfs/data/<app>/`. The scripted form used to produce `analysis/*.patch`:
+Then diff each upstream tree against `rootfs/data/<app>/`. The scripted form used to produce the three patches:
 
 ```sh
 IMG=/path/to/KOS/rootfs/data
@@ -140,7 +128,7 @@ done
 | DSF / Duet | `/opt/dsf` — duetcontrolserver, duetwebserver, duetpluginservice; board configs for fly-c5, c5-v1.1, c8, c8p |
 | Also | ffmpeg, mpv, ustreamer, mjpg_streamer, v4l-utils, hostapd, wpa_supplicant, udhcpd, ntpd, polkit, Xorg + GTK3, git, gcc-arm-none-eabi in `/opt` |
 
-Python site-packages of note: numpy, scipy, matplotlib, Pillow, tornado (6.2 *and* 6.5.2), msgspec, msgpack, uvicorn, uvloop, zeroconf, python-can, pyserial(-asyncio), GitPython, PyGObject, sdbus-networkmanager, dbus-fast, dbus-next, streaming-form-data, preprocess-cancellation, zstandard, lmdb, libnacl, jinja2, distro, psutil, pyudev. Full list in `analysis/python-site-packages.txt`.
+Python site-packages of note: numpy, scipy, matplotlib, Pillow, tornado (6.2 *and* 6.5.2), msgspec, msgpack, uvicorn, uvloop, zeroconf, python-can, pyserial(-asyncio), GitPython, PyGObject, sdbus-networkmanager, dbus-fast, dbus-next, streaming-form-data, preprocess-cancellation, zstandard, lmdb, libnacl, jinja2, distro, psutil, pyudev. Full list in [`python-site-packages.txt`](python-site-packages.txt).
 
 Note: `flyos-init-venv` creates `/data/{klippy,moonraker,klipperscreen}-env` and just copies system site-packages into them. The venvs are cosmetic — the shipped units run `/usr/bin/python` directly.
 
@@ -156,20 +144,20 @@ Note: `flyos-init-venv` creates `/data/{klippy,moonraker,klipperscreen}-env` and
 
 ## Security notes (before deriving anything from this image)
 
-- Root has a fixed SHA-256 crypt password baked into `/etc/shadow` — the same credential on every shipped unit.
-- `ttyd` is enabled on :8888, `--writable`, running `/usr/bin/login`, with no auth configured.
-- Moonraker binds `0.0.0.0:7125` with `trusted_clients: 0.0.0.0/0, ::/0` and `cors_domains: *` — authentication is effectively off.
-- Open ports as shipped: 22 (ssh), 80 / 9080 (Fluidd) / 9081 (Mainsail) nginx, 7125 moonraker, 8080-8083 crowsnest, 8888 ttyd.
+- Every shipped unit has the same root password.
+- The image ships a web terminal with no authentication of its own in front of the root login. With the shared password, that is a root shell for anyone on the network.
+- Moonraker listens on all interfaces and trusts every address and every origin, so its authentication is effectively off.
+- Open services as shipped: SSH, nginx (Fluidd and Mainsail), Moonraker, Crowsnest webcam streams, and the web terminal.
 
-Any derivative needs a fresh root password, ttyd disabled or authenticated, and a real `trusted_clients` list before it goes on a network you don't control.
+Any derivative needs its own credentials, no web shell open to the network, and a real `trusted_clients` list before it goes on a network you don't control. KOS ships no web terminal and no root password.
 
 ## Where this went
 
-The teardown answered its questions: the base distro is a customized Buildroot tree with no published source, the provisioning and real-time design is fully readable from `flyos-glue/`, and the vendor's application changes are extracted as patches.
+The teardown answered its questions: the base distro is a customized Buildroot tree with no published source, the provisioning and real-time design is fully readable from the vendor's own scripts and units (described in [`flyos-glue.md`](flyos-glue.md)), and the vendor's application changes were extracted as patches.
 
-Two paths were on the table at the end of the teardown — follow FlyOS's Buildroot + A/B SquashFS design, or drop the appliance model for a package-managed distro. **The project took the second, on different hardware:** Debian trixie on arm64 (CM5 / CB1), keeping the ideas worth keeping (FAT provisioning partition, CAN bring-up files, core isolation, mount options) and none of the binaries — the analyzed image is 32-bit armv7 H3, so only its shell, unit and config text was ever reusable. Reasoning in [`PLAN.md`](PLAN.md) §2, §5, §7, §10.
+Two paths were on the table at the end of the teardown — follow FlyOS's Buildroot + A/B SquashFS design, or drop the appliance model for a package-managed distro. **The project took the second, on different hardware:** Debian trixie on arm64 (CM5 / CB1), keeping the ideas worth keeping (FAT provisioning partition, CAN bring-up files, core isolation, mount options) and none of the binaries — the analyzed image is 32-bit armv7 H3, so only its shell, unit and config text was ever reusable. Reasoning in [`docs/plan.md`](../plan.md) §2, §5, §7, §10.
 
-Adopted from this teardown: the `/config` FAT provisioning file, first-boot seeding of user data, `99-can.network` / `99-can-link.link` verbatim, `noatime,nodiratime,commit=120,errors=remount-ro`, `isolcpus` + `CPUAffinity` + IRQ steering, logs off the card.
+Adopted from this teardown: the `/config` FAT provisioning file, first-boot seeding of user data, the `99-can.network` / `99-can-link.link` settings ([network files](flyos-glue.md#network-files)), `noatime,nodiratime,commit=120,errors=remount-ro`, `isolcpus` + `CPUAffinity` + IRQ steering, logs off the card.
 
 Dropped: `source`-ing the config file as root, the kernel-command-line provisioning route (no U-Boot on the Pi), the venvs that copy system site-packages, and the entire network posture (see the security notes above).
 

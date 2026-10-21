@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 2 print summary from klippy.log (BENCHMARKS.md). Reads the last print, between 'Starting SD card print' and
+"""Phase 2 print summary from klippy.log (docs/benchmarks.md). Reads the last print, between 'Starting SD card print' and
 'Exiting SD card print', and prints JSON: timer errors, shutdowns, stalls, sysload, Klippy CPU, buffer time, and per
 MCU round-trip time, retransmits and load. Same parser for every install, so the numbers compare.
 

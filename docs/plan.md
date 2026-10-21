@@ -1,8 +1,8 @@
 # KOS — design plan (V1)
 
-User-facing overview is [`README.md`](README.md); the FlyOS-Fast teardown this project grew out of is [`TEARDOWN.md`](TEARDOWN.md).
+User-facing overview is [`README.md`](../README.md); the FlyOS-Fast teardown this project grew out of is [`teardown/README.md`](teardown/README.md).
 
-Concepts and decisions, not a build procedure. Where FlyOS-Fast already solved something, the reference points at the extracted file so the mechanism can be read rather than re-derived. Paths are relative to this repo; `analysis/flyos-glue/` survives deleting the 5.4 GB extract.
+Concepts and decisions, not a build procedure. Where FlyOS-Fast already solved something, the reference names the vendor file (with line numbers as shipped in the image) so the mechanism can be traced rather than re-derived. The vendor files are not in this repo; [`teardown/flyos-glue.md`](teardown/flyos-glue.md) describes each one. Other paths are relative to this repo.
 
 Last validated 2026-09-03 against the extracted image and upstream sources; see §20 for what was checked and what changed. **Implementation started 2026-09-03; §21 tracks what exists, what is tested, and what still needs hardware.** Where the code diverged from the design below, the section says so inline with a "Built:" note.
 
@@ -18,12 +18,12 @@ Implied by the test but easy to forget: the user has no serial console and no kn
 
 ## 2. Base OS: Debian
 
-Decided: Debian, because `apt` and `sudo` are required. This is a deliberate divergence from FlyOS, which is Buildroot with no package manager at all — no dpkg/opkg/apk, no package database anywhere (`analysis/FlyOS-Fast-1.3.8-inventory.md` §3). Their image is smaller and immutable; ours is maintainable and debuggable at 3am on a printer that won't home.
+Decided: Debian, because `apt` and `sudo` are required. This is a deliberate divergence from FlyOS, which is Buildroot with no package manager at all — no dpkg/opkg/apk, no package database anywhere (`docs/teardown/FlyOS-Fast-1.3.8-inventory.md` §3). Their image is smaller and immutable; ours is maintainable and debuggable at 3am on a printer that won't home.
 
 Consequences to accept up front:
 
 - Size baseline, corrected: FlyOS's root is a 620 MB SquashFS-zstd (`7zz l parts/2.img` → Physical Size 620,195,840) that unpacks to **3.1 GB** on disk (`du -sh rootfs`). Of that, `/data/klipper` is 222 MB, `/data/katapult` 120 MB (a vendored `lib/`), modules 80 MB, plus Xorg/GTK, DSF and the ARM toolchain. An ext4 image is uncompressed, so the honest comparison is against 3.1 GB, not 620 MB. Target: **≤1.5 GB image, ≤400 MB RAM at idle**, measured every build.
-- Debian's Python is fine: FlyOS proves the dependency set is modest — see `analysis/python-site-packages.txt` for exactly what Klipper + Moonraker + Crowsnest actually need at runtime (numpy, scipy, matplotlib, tornado, msgspec/msgpack, jinja2, libnacl, streaming-form-data, zeroconf, pyserial, python-can, distro, psutil, lmdb, preprocess-cancellation, paho-mqtt, dbus-fast, pyudev…). Nothing exotic. Klipper builds `chelper/c_helper.so` on first start, so `gcc`, `libffi-dev` and `python3-dev` stay in the image (FlyOS ships a prebuilt `.so` instead; we can't, because a git update would need the compiler anyway).
+- Debian's Python is fine: FlyOS proves the dependency set is modest — see `docs/teardown/python-site-packages.txt` for exactly what Klipper + Moonraker + Crowsnest actually need at runtime (numpy, scipy, matplotlib, tornado, msgspec/msgpack, jinja2, libnacl, streaming-form-data, zeroconf, pyserial, python-can, distro, psutil, lmdb, preprocess-cancellation, paho-mqtt, dbus-fast, pyudev…). Nothing exotic. Klipper builds `chelper/c_helper.so` on first start, so `gcc`, `libffi-dev` and `python3-dev` stay in the image (FlyOS ships a prebuilt `.so` instead; we can't, because a git update would need the compiler anyway).
 - Keep `apt` genuinely usable: don't do read-only root in V1 (see §7).
 
 **Base suite: `trixie` (Debian 13).** The original draft said bookworm-unless-forced; that is stale. Trixie has been stable since August 2025, Raspberry Pi OS ships on trixie, and Armbian's CB1 images are trixie-based. Bookworm is now oldstable and buys nothing.
@@ -37,7 +37,7 @@ Kernels do not come from Debian on either board (§14): Raspberry Pi's `archive.
 Mechanically, one card *can* boot both:
 
 - **CM5/CM4** — bootloader lives in SPI EEPROM; it reads firmware, kernel and DTB as *files* from the first FAT partition (`config.txt`, `cmdline.txt`, `kernel_2712.img` / `kernel8.img`).
-- **CB1** — Allwinner H616 (sun50iw9 family; same die family as the H618 that FlyOS's own glue already special-cases, see `analysis/flyos-glue/scripts/flyos-blk-links:28-35`). The BROM loads the SPL from a *raw sector offset*: 8 KiB (sector 16) first, then 256 KiB (sector 512) on H616 — the 128 KiB fallback belongs to older sunxi parts. Armbian's CB1 config uses a **FAT** boot partition labelled `BOOT` (`BOOTFS_TYPE="fat"`), `boot.scr` + `armbianEnv.txt`, DTB `sun50i-h616-bigtreetech-cb1-sd.dtb`, overlay prefix `sun50i-h616`.
+- **CB1** — Allwinner H616 (sun50iw9 family; same die family as the H618 that FlyOS's own glue already special-cases, see [`flyos-blk-links:28-35`](teardown/flyos-glue.md#flyos-blk-links)). The BROM loads the SPL from a *raw sector offset*: 8 KiB (sector 16) first, then 256 KiB (sector 512) on H616 — the 128 KiB fallback belongs to older sunxi parts. Armbian's CB1 config uses a **FAT** boot partition labelled `BOOT` (`BOOTFS_TYPE="fat"`), `boot.scr` + `armbianEnv.txt`, DTB `sun50i-h616-bigtreetech-cb1-sd.dtb`, overlay prefix `sun50i-h616`.
 
 Those two mechanisms don't collide: raw sectors before the first partition vs. files inside a FAT partition, and both bootloaders are happy reading their files from the same FAT volume. A hybrid card is genuinely possible.
 
@@ -47,39 +47,39 @@ Design the rootfs so this stays cheap: everything board-specific lives behind a 
 
 ## 4. What "very lightweight" means concretely
 
-FlyOS is the baseline for what a full-featured vendor image costs: 979 binaries, 556 shared libraries, 2,696 kernel modules, an entire Xorg + GTK3 stack, gcc-arm-none-eabi in `/opt`, and the whole Duet/DSF stack alongside Klipper (`analysis/userland-binaries.txt`, `analysis/FlyOS-Fast-1.3.8-inventory.md` §5-6).
+FlyOS is the baseline for what a full-featured vendor image costs: 979 binaries, 556 shared libraries, 2,696 kernel modules, an entire Xorg + GTK3 stack, gcc-arm-none-eabi in `/opt`, and the whole Duet/DSF stack alongside Klipper (`docs/teardown/userland-binaries.txt`, `docs/teardown/FlyOS-Fast-1.3.8-inventory.md` §5-6).
 
 Cut list for V1:
 
 - No Xorg/GTK/KlipperScreen (headless; screens are V2)
 - No DSF/RRF path — Klipper only
-- One web UI, not two. **Mainsail** (decided 2026-10-19: the owner's configs are Mainsail-based and `[include mainsail.cfg]`; no performance reason was ever recorded for Fluidd, and both are static files behind nginx). `mainsail-config` is cloned and `mainsail.cfg` symlinked into the config dir, as Mainsail's installer does; nginx serving static files is enough. FlyOS's `analysis/flyos-glue/web/sites-available/fluidd` is the standard upstream nginx site verbatim (proxy `/websocket` and `/(printer|api|access|machine|server)/` to Moonraker, `client_max_body_size 0`) — copy it. FlyOS ships both UIs plus both nginx *and* Caddy.
+- One web UI, not two. **Mainsail** (decided 2026-10-19: the owner's configs are Mainsail-based and `[include mainsail.cfg]`; no performance reason was ever recorded for Fluidd, and both are static files behind nginx). `mainsail-config` is cloned and `mainsail.cfg` symlinked into the config dir, as Mainsail's installer does; nginx serving static files is enough. FlyOS's [`sites-available/fluidd`](teardown/flyos-glue.md#web-server) is the standard upstream nginx site verbatim (proxy `/websocket` and `/(printer|api|access|machine|server)/` to Moonraker, `client_max_body_size 0`) — copy it. FlyOS ships both UIs plus both nginx *and* Caddy.
 - No vendored toolchain — flashing MCU firmware is a build-host job, or an opt-in package
 - Trim locales, docs, man pages, and the module tree to what the board actually has
 - Camera stack (Crowsnest/ustreamer) is optional-by-default, not baked in
 - Katapult: scripts only (`flashtool.py`), not the 120 MB vendored tree
 
-Anti-pattern worth naming: FlyOS creates `/data/{klippy,moonraker,klipperscreen}-env` and then just copies system site-packages into them (`analysis/flyos-glue/scripts/flyos-init-venv`); the shipped units ignore the venvs and run `/usr/bin/python` directly. Either use real venvs or don't pretend — for a Debian base, real venvs per app (`--system-site-packages` over Debian's numpy/matplotlib to avoid compiling them) are the honest choice and cost little. Moonraker's `update_manager` also expects a venv path per app.
+Anti-pattern worth naming: FlyOS creates `/data/{klippy,moonraker,klipperscreen}-env` and then just copies system site-packages into them ([`flyos-init-venv`](teardown/flyos-glue.md#flyos-init-venv)); the shipped units ignore the venvs and run `/usr/bin/python` directly. Either use real venvs or don't pretend — for a Debian base, real venvs per app (`--system-site-packages` over Debian's numpy/matplotlib to avoid compiling them) are the honest choice and cost little. Moonraker's `update_manager` also expects a venv path per app.
 
 ## 5. The provisioning surface
 
-The single best idea in FlyOS: **a FAT partition the user can edit from any OS after flashing**, holding one plain-text config file that drives everything (`analysis/flyos-glue/config/config.txt`). Wi-Fi credentials, timezone, hostname, CAN bitrate, which UI, which screen — all set before first boot, no serial console, no SSH-then-fix dance. FlyOS mounts it `vfat … sync,umask=000` (`flyos-mounts:14`).
+The single best idea in FlyOS: **a FAT partition the user can edit from any OS after flashing**, holding one plain-text config file that drives everything ([`config.txt`](teardown/flyos-glue.md#configtxt)). Wi-Fi credentials, timezone, hostname, CAN bitrate, which UI, which screen — all set before first boot, no serial console, no SSH-then-fix dance. FlyOS mounts it `vfat … sync,umask=000` (`flyos-mounts:14`).
 
 Adopt this. Three adjustments:
 
 - **Don't name it `config.txt` on the Pi.** That name (and `cmdline.txt`) is owned by the Raspberry Pi firmware on the first FAT partition. Use a distinct name (`kos.conf`) and, ideally, a separate third FAT partition mounted at `/config`, so the firmware's file and ours never share a directory. The Pi firmware only reads the first FAT partition, so a second one is invisible to it. Keeps CM5 and CB1 identical.
-- **Don't route settings through the kernel command line.** FlyOS imports `config.txt` into the U-Boot environment and forwards keys into `bootargs` (`analysis/flyos-glue/boot/boot.scr.txt:52-54, 124-125`), then gates services with `ConditionKernelCommandLine=` (`analysis/flyos-glue/systemd/klipper.service:7`). Elegant, but it depends on U-Boot — the Pi has no equivalent. The portable equivalent is a first-boot unit that parses the file and enables/disables units with `systemctl`, plus `EnvironmentFile=` for values services need at runtime (`klipper.service:21` shows the pattern).
+- **Don't route settings through the kernel command line.** FlyOS imports `config.txt` into the U-Boot environment and forwards keys into `bootargs` ([`boot.scr.txt:52-54, 124-125`](teardown/flyos-glue.md#boot)), then gates services with `ConditionKernelCommandLine=` ([`klipper.service:7`](teardown/flyos-glue.md#klipperservice)). Elegant, but it depends on U-Boot — the Pi has no equivalent. The portable equivalent is a first-boot unit that parses the file and enables/disables units with `systemctl`, plus `EnvironmentFile=` for values services need at runtime (`klipper.service:21` shows the pattern).
 - **Don't `source` it.** FlyOS runs `source "$fp_config"` as root (`flyos-config:145`, `flyos-firstrun:11`, `flyos-set-hostname:16`), so the config file is a root shell script. Parse `key=value` lines instead. The threat is low (whoever holds the card owns the machine anyway) but the parser is the same size and doesn't break on a stray `$`.
 
 **Built:** the partition is labelled `KOS` (FAT32, 64 MB), mounted at `/config` with FlyOS's `sync,umask=000` plus `nofail`, and holds `kos.conf` (`build/config-partition/kos.conf` is the shipped template with every key documented). Parser is `cfg KEY DEFAULT` in `overlay/usr/lib/kos/lib.sh` (awk, last key wins, strips one layer of quotes) and a matching 10-line `read_conf()` in the two Python tools. On CB1 it is partition 1; on CM5/CM4 it will be partition 2 because the Pi firmware's FAT must come first.
 
-Also worth copying: seeding user data from the FAT partition on first boot. FlyOS rsyncs `/config/printer_data/` into place once and deletes the marker (`analysis/flyos-glue/scripts/flyos-firstrun:3-21`; note it also `rm -rf`s the source dir at line 21 — rename it to `printer_data.imported/` instead so the user's original survives). That is exactly the "copy an existing cfg file over" half of the V1 acceptance test — the user drops `printer.cfg` on the FAT partition from their laptop and it lands in `printer_data/config` on boot.
+Also worth copying: seeding user data from the FAT partition on first boot. FlyOS rsyncs `/config/printer_data/` into place once and deletes the marker ([`flyos-firstrun:3-21`](teardown/flyos-glue.md#flyos-firstrun); note it also `rm -rf`s the source dir at line 21 — rename it to `printer_data.imported/` instead so the user's original survives). That is exactly the "copy an existing cfg file over" half of the V1 acceptance test — the user drops `printer.cfg` on the FAT partition from their laptop and it lands in `printer_data/config` on boot.
 
 ## 6. First-boot flow
 
 Conceptually: expand → seed → identify → configure → start.
 
-- **Expand.** FlyOS hand-rolls partition expansion with scripted `fdisk` before systemd starts (`analysis/flyos-glue/scripts/flyos-init:39-102`) because Buildroot gave it nothing better. On Debian: `growpart` (package `cloud-guest-utils`, one line, works on MBR and GPT) in a oneshot unit, then `x-systemd.growfs` in `fstab` for the filesystem. `systemd-repart` is the nicer tool but is **GPT-only**; it becomes an option only if the GPT decision in §15 goes that way.
+- **Expand.** FlyOS hand-rolls partition expansion with scripted `fdisk` before systemd starts ([`flyos-init:39-102`](teardown/flyos-glue.md#flyos-init)) because Buildroot gave it nothing better. On Debian: `growpart` (package `cloud-guest-utils`, one line, works on MBR and GPT) in a oneshot unit, then `x-systemd.growfs` in `fstab` for the filesystem. `systemd-repart` is the nicer tool but is **GPT-only**; it becomes an option only if the GPT decision in §15 goes that way.
 - **Seed.** Copy user files from `/config`, regenerate SSH host keys and machine-id (FlyOS: `flyos-set-hostname:6`), set hostname (`flyos-set-hostname:40-46`), apply timezone and Wi-Fi from the config file (`flyos-config:60-76` and `:159-202`; Wi-Fi via `nmcli`, creating a connection named "FlyOS wireless" with `autoconnect-priority -999`).
 - **Identify.** MCU discovery — the interesting part, §8.
 - **Configure/start.** Enable the units the config file asked for; drop the first-boot marker.
@@ -90,7 +90,7 @@ Everything here is an ordinary systemd unit ordered before `klipper.service`. No
 
 ## 7. Durability vs. writability
 
-FlyOS's answer to "printers lose power mid-write": read-only SquashFS root, everything mutable in an overlayfs on a separate ext4 partition, plus A/B root slots (`analysis/flyos-glue/scripts/flyos-init:153-196`, inventory §2). It's a good answer, and it is fundamentally incompatible with `apt install` on a running machine.
+FlyOS's answer to "printers lose power mid-write": read-only SquashFS root, everything mutable in an overlayfs on a separate ext4 partition, plus A/B root slots ([`flyos-init:153-196`](teardown/flyos-glue.md#flyos-init), inventory §2). It's a good answer, and it is fundamentally incompatible with `apt install` on a running machine.
 
 **V1: writable root, mitigations only.**
 
@@ -122,7 +122,7 @@ Facts that shape the design:
 Design concept for V1:
 
 - **Own the `[mcu]` sections.** A first-boot (and on-demand) discovery service enumerates `/dev/serial/by-id/usb-Klipper_*` and `usb-katapult_*`, queries the CAN bus for UUIDs, then *generates* `mcus.cfg` containing the `[mcu]` / `[mcu toolhead]` blocks. The user's `printer.cfg` keeps everything else and gains one `[include mcus.cfg]`. The seeding step comments out existing `[mcu*]` blocks in the imported file and reports what it did. Klipper's `SAVE_CONFIG` block must stay at the bottom of `printer.cfg`; includes elsewhere are fine.
-- **Stable role names via udev.** Assign `/dev/klipper-main`, `/dev/klipper-toolhead0` from VID/PID + serial once a role is known, so `mcus.cfg` never has to change again. FlyOS's own rules are thin (`analysis/flyos-glue/udev/98-flyos-serial.rules` just maps non-8250 `ttyS*` to `/dev/serialN`; `97-flyos-usb.rules` handles the STM32 HID bootloader and USB storage automount) — there's little to copy, this is new work.
+- **Stable role names via udev.** Assign `/dev/klipper-main`, `/dev/klipper-toolhead0` from VID/PID + serial once a role is known, so `mcus.cfg` never has to change again. FlyOS's own rules are thin ([`98-flyos-serial.rules`](teardown/flyos-glue.md#udev-rules) just maps non-8250 `ttyS*` to `/dev/serialN`; `97-flyos-usb.rules` handles the STM32 HID bootloader and USB storage automount) — there's little to copy, this is new work.
 - **Report, don't guess.** When discovery finds two identical boards and can't tell which is the toolhead, write both into `mcus.cfg` commented with their descriptors and surface a clear message (Moonraker announcement + a file on `/config`). Silent wrong guesses are worse than a one-line manual edit. Heuristics that are usually right and can be offered as defaults: a lone USB Klipper device is the main MCU; a CAN node whose MCU type is a G0/G4/RP2040 class part alongside a larger F4/H7 main is the toolhead.
 - Ambiguity resolution belongs in the config file too: let `kos.conf` pin `main_mcu_serial=` / `toolhead_uuid=` when the user already knows.
 
@@ -143,8 +143,8 @@ Neither CM5 nor CB1 has a native CAN controller, so this is USB (`gs_usb`: candl
 
 Bring-up should be declarative, exactly as FlyOS does it:
 
-- `analysis/flyos-glue/network/99-can.network`: `[Match] Name=can*` + `[CAN] BitRate=1000000, RestartSec=100ms`
-- `analysis/flyos-glue/network/99-can-link.link`: `TransmitQueueLength=1024` — the queue-length bump that everyone otherwise discovers the hard way after random `Timer too close` errors. Klipper's docs say 128; FlyOS uses 1024; the CB1-on-mainline write-up that ran for months used 128. Either works, the default of 10 does not.
+- [`99-can.network`](teardown/flyos-glue.md#network-files): `[Match] Name=can*` + `[CAN] BitRate=1000000, RestartSec=100ms`
+- [`99-can-link.link`](teardown/flyos-glue.md#network-files): `TransmitQueueLength=1024` — the queue-length bump that everyone otherwise discovers the hard way after random `Timer too close` errors. Klipper's docs say 128; FlyOS uses 1024; the CB1-on-mainline write-up that ran for months used 128. Either works, the default of 10 does not.
 - Bitrate is user-settable and rewritten in place from the config file (`flyos-config:78-93`); it must match the toolhead firmware, so expose it prominently (FlyOS defaults to 1 Mbit)
 
 Discovery (§8) should query CAN UUIDs after the interface is up, and ordering must guarantee that happens before `klipper.service` starts. If NetworkManager owns the box, still let `systemd-networkd` own `can*` (NM ignores CAN links) — that's what FlyOS does, both are enabled.
@@ -153,9 +153,9 @@ Discovery (§8) should query CAN UUIDs after the interface is up, and ordering m
 
 FlyOS pins Klippy to an isolated core:
 
-- Kernel args: `nohz=on nohz_full=3 rcu_nocbs=3 isolcpus=3`, `cpufreq_default_governor=performance` (`analysis/flyos-glue/boot/boot.scr.txt:97-98`)
-- Unit: `CPUAffinity=3`, `Nice=-18`, `IOSchedulingPriority=2` (`analysis/flyos-glue/systemd/klipper.service:14-16`), Moonraker at `Nice=-18`, `IOSchedulingPriority=2` (`moonraker.service:14-15`)
-- IRQ steering away from the isolated core: USB, MMC and ethernet IRQs pinned to CPUs 1–2 by mask (`flyos-init-hard:27-32`)
+- Kernel args: `nohz=on nohz_full=3 rcu_nocbs=3 isolcpus=3`, `cpufreq_default_governor=performance` ([`boot.scr.txt:97-98`](teardown/flyos-glue.md#boot))
+- Unit: `CPUAffinity=3`, `Nice=-18`, `IOSchedulingPriority=2` ([`klipper.service:14-16`](teardown/flyos-glue.md#klipperservice)), Moonraker at `Nice=-18`, `IOSchedulingPriority=2` (`moonraker.service:14-15`)
+- IRQ steering by mask (`flyos-init-hard:27-31`, the same lines as Armbian's `armbian-hardware-optimization`): USB to CPUs 1 and 2, but MMC and ethernet to CPU 3 (mask 8), the core it reserves for Klippy
 
 Correction: **`nohz_full=` and `rcu_nocbs=` are inert on both stock kernels.** Neither Raspberry Pi's 6.12 defconfigs nor Armbian's sunxi64-current config set `CONFIG_NO_HZ_FULL` or `CONFIG_RCU_NOCB_CPU` (checked 2026-09-03; both have `CONFIG_NO_HZ=y` = idle-only, and `CONFIG_PREEMPT=y`). `isolcpus=3` works everywhere. What actually ports:
 
@@ -172,7 +172,7 @@ Keep the service set small: klipper, moonraker, nginx, NetworkManager, systemd-n
 
 Discovery for the headless acceptance test: `avahi-daemon` publishing `<hostname>.local`, and Moonraker's `[zeroconf]` section so Fluidd/Mainsail and slicers find the printer. FlyOS leaves `[zeroconf]` commented out (`config/moonraker.conf:9-10`) and instead prints the IP on a splash screen we don't have.
 
-Do **not** copy FlyOS's network posture. Their image ships root with a fixed password baked into `/etc/shadow`, a writable unauthenticated `ttyd` root shell on :8888, and Moonraker with `trusted_clients: 0.0.0.0/0, ::/0` and `cors_domains: *` (inventory §9, `config/moonraker.conf:18-34`). For us: no default root password, key-based SSH or first-boot-set credentials from `kos.conf`, and a `trusted_clients` list generated from the actual LAN prefix at first boot (fall back to RFC1918 + link-local, which is what Moonraker's own installer suggests).
+Do **not** copy FlyOS's network posture. Their image ships the same root password on every unit, a web terminal with no authentication of its own in front of that root login (in effect a root shell for anyone on the network), and a Moonraker that trusts every address and every origin (inventory §9, [`moonraker.conf`](teardown/flyos-glue.md#moonrakerconf)). KOS ships no web terminal. For us: no default root password, key-based SSH or first-boot-set credentials from `kos.conf`, and a `trusted_clients` list generated from the actual LAN prefix at first boot (fall back to RFC1918 + link-local, which is what Moonraker's own installer suggests).
 
 Moonraker needs `sudo` for its `[machine]` component (reboot, service control; `provider: systemd_dbus` is preferable to FlyOS's `systemd_cli`) — another reason Debian.
 
@@ -189,10 +189,10 @@ The cost is disk (shallow clones keep it small; `update_manager` copes with `--d
 
 ## 13. Worth stealing from their patches
 
-The patch analysis (inventory §7, `analysis/*.patch`) separates Fly-hardware code from generally-useful fixes:
+The patch analysis (inventory §7, [vendor patches](teardown/flyos-glue.md#vendor-patches)) separates Fly-hardware code from generally-useful fixes:
 
 - `power_loss_resume.py` + the heavy `virtual_sdcard.py` rewrite — power-loss recovery. High value on a printer, but it's a large patch against a moving upstream file; treat as opt-in, not baked in.
-- Moonraker `machine.py` SD-device fix — resolves the root device via `findmnt`/`lsblk` instead of hardcoding `mmcblk0` (`analysis/moonraker-vendor.patch:618-661`). Still relevant: upstream `master` hardcodes `/sys/block/mmcblk0/device/cid` as of 2026-09-03. Effect on us is cosmetic (SD info panel in the UI), so: carry it as a small patch, or upstream it, but don't block on it. On CM5 with eMMC the root *is* `mmcblk0`, so the stock code happens to work there.
+- Moonraker `machine.py` SD-device fix — resolves the root device via `findmnt`/`lsblk` instead of hardcoding `mmcblk0` ([Moonraker patch](teardown/flyos-glue.md#moonraker-patch)). Still relevant: upstream `master` hardcodes `/sys/block/mmcblk0/device/cid` as of 2026-09-03. Effect on us is cosmetic (SD info panel in the UI), so: carry it as a small patch, or upstream it, but don't block on it. On CM5 with eMMC the root *is* `mmcblk0`, so the stock code happens to work there.
 - `filament_blockage_detection` — self-contained, opt-in, needs its MCU-side `.c` compiled into the toolhead firmware, so it's really a firmware-build option.
 - Skip: `fly_lcd` (both sides), the OTA client, KlipperScreen theming, and the host↔MCU communication patches (`mcu.py`/`serialhdl.py`/`src/*.c` are patched together, so they only make sense with Fly-built firmware).
 
@@ -265,7 +265,7 @@ display=none        # none | hdmi | <panel-id in V2>
 
 `display=none` means, per board:
 
-- **CB1** — `extraargs=video=HDMI-A-1:d` in `armbianEnv.txt`, plus a modprobe blacklist for `sun4i_drm`, `sun8i_mixer`, `sun8i_drm_hdmi`, `lima`/`panfrost`. **Checked in the built image: Armbian's 6.18.44 config has `CONFIG_DRM_SUN4I=y` (built in), so the blacklist is inert for the display engine itself and only `video=HDMI-A-1:d` acts; `CONFIG_CMA_SIZE_MBYTES=64`.** Candidate to measure on hardware: `initcall_blacklist=sun4i_drv_platform_driver_init` on the command line, which stops a built-in driver from binding at all. Not baked in until `Cma` in `/proc/meminfo` shows it is worth it. FlyOS does the equivalent in U-Boot: `fdt set /soc/hdmi@1ee0000 status "disabled"` whenever `screen` is not `hdmi` (`analysis/flyos-glue/boot/boot.scr.txt:126-131`), and shrinks the framebuffer reservation with `sunxi_fb_mem_reserve=32` (`:96`). On mainline the reservation is CMA; check `cat /proc/meminfo | grep Cma` before and after — expect tens of MB back on a 1 GB board.
+- **CB1** — `extraargs=video=HDMI-A-1:d` in `armbianEnv.txt`, plus a modprobe blacklist for `sun4i_drm`, `sun8i_mixer`, `sun8i_drm_hdmi`, `lima`/`panfrost`. **Checked in the built image: Armbian's 6.18.44 config has `CONFIG_DRM_SUN4I=y` (built in), so the blacklist is inert for the display engine itself and only `video=HDMI-A-1:d` acts; `CONFIG_CMA_SIZE_MBYTES=64`.** Candidate to measure on hardware: `initcall_blacklist=sun4i_drv_platform_driver_init` on the command line, which stops a built-in driver from binding at all. Not baked in until `Cma` in `/proc/meminfo` shows it is worth it. FlyOS does the equivalent in U-Boot: `fdt set /soc/hdmi@1ee0000 status "disabled"` whenever `screen` is not `hdmi` ([`boot.scr.txt:126-131`](teardown/flyos-glue.md#boot)), and shrinks the framebuffer reservation with `sunxi_fb_mem_reserve=32` (`:96`). On mainline the reservation is CMA; check `cat /proc/meminfo | grep Cma` before and after — expect tens of MB back on a 1 GB board.
 - **CM5/CM4** — omit `dtoverlay=vc4-kms-v3d` from `config.txt`, same `video=HDMI-A-1:d` in `cmdline.txt`, blacklist `vc4`/`v3d`. Pi 5 firmware no longer honours `gpu_mem`, so the DT overlay is the only lever.
 - **Both** — keep `getty@tty1` (it costs nothing and is the debug path when networking fails), `consoleblank=0` so a monitor plugged in later still shows the console, and mask any display unit V2 adds (`klipperscreen`, a display manager) with `systemctl mask` from the same first-boot unit that reads the key.
 
@@ -275,7 +275,7 @@ display=none        # none | hdmi | <panel-id in V2>
 
 - **Core isolation** — `isolcpus=3` + `CPUAffinity=3` on `klipper.service` (§10). Measure: `srtt` spread and TTC count with and without. This is the single highest-expected-value change on CB1.
 - **Governor** — Armbian ships `ondemand` with a 480 MHz floor on `sun50iw9` (`CPUMIN=480000`, `CPUMAX=1512000`). Options: `performance` (simplest, costs a few hundred mW), or `ondemand` with the floor raised to ~800 MHz (the mainline-CB1 community setting). Compare power/thermal on the SoM: the H616 throttles under a heatsink-less Manta enclosure; check `/sys/class/thermal` during the print.
-- **IRQ affinity** — keep USB (CAN adapter, main MCU), MMC and ethernet IRQs off core 3; FlyOS pins them to cores 1–2 by mask (`flyos-init-hard:27-32`). On CB1 the names in `/proc/interrupts` are `sunxi-mmc`, `ehci_hcd`/`ohci_hcd`/`musb-hdrc`, `eth0`/`end0`; on CM5 they live behind the RP1 (`rp1_*`). Match by name, never by number.
+- **IRQ affinity** — keep USB (CAN adapter, main MCU), MMC and ethernet IRQs off core 3; FlyOS gets this wrong: it puts USB on cores 1–2 but MMC and ethernet on core 3 (mask 8, `flyos-init-hard:27-31`), the Armbian default. On CB1 the names in `/proc/interrupts` are `sunxi-mmc`, `ehci_hcd`/`ohci_hcd`/`musb-hdrc`, `eth0`/`end0`; on CM5 they live behind the RP1 (`rp1_*`). Match by name, never by number.
 - **`Nice=-18` / `IOSchedulingPriority=2`** on klipper and moonraker (§10). Cheap; verify it doesn't starve `nginx` during a large upload mid-print.
 - **Wi-Fi power save off** — `nmcli connection modify <con> wifi.powersave 2`. RTL8189FS with power save on is the usual cause of Moonraker websocket drops and "lost connection" reports on CB1. Not a print-quality issue, but it is the top user-visible complaint. Disable IPv6 on the link too if the Realtek driver misbehaves with RA traffic (the mainline-CB1 write-up did).
 
@@ -392,27 +392,27 @@ Each of these has a hook left in the design (partition layout, config-file keys,
 
 | Concept | Where to read it |
 |---|---|
-| Pre-systemd init, overlay mounts, partition growth | `analysis/flyos-glue/scripts/flyos-init` (`:39-102` grow, `:153-196` overlays, `:18,120` mount options) |
-| First-boot seeding from FAT partition | `analysis/flyos-glue/scripts/flyos-firstrun:3-21` |
-| Config-file-driven provisioning (Wi-Fi, TZ, CAN, board) | `analysis/flyos-glue/scripts/flyos-config` (`:60-76` timezone, `:78-93` CAN bitrate, `:95-118` chattr, `:159-202` Wi-Fi) |
-| Hostname, machine-id reset, UI database seeding | `analysis/flyos-glue/scripts/flyos-set-hostname` |
-| zram swap, `/var/log` on zram, journald cap | `analysis/flyos-glue/scripts/flyos-init-zram` |
-| Governor and IRQ affinity | `analysis/flyos-glue/scripts/flyos-init-hard` |
-| User-facing config surface | `analysis/flyos-glue/config/config.txt` |
-| Config → U-Boot env → kernel cmdline | `analysis/flyos-glue/boot/boot.scr.txt:52-54, 84-101, 124-125` |
-| Service gating on cmdline flags | `analysis/flyos-glue/systemd/klipper.service:7`, `klipper-mcu.service:7-8` |
+| Pre-systemd init, overlay mounts, partition growth | [`flyos-init`](teardown/flyos-glue.md#flyos-init) (`:39-102` grow, `:153-196` overlays, `:18,120` mount options) |
+| First-boot seeding from FAT partition | [`flyos-firstrun:3-21`](teardown/flyos-glue.md#flyos-firstrun) |
+| Config-file-driven provisioning (Wi-Fi, TZ, CAN, board) | [`flyos-config`](teardown/flyos-glue.md#flyos-config) (`:60-76` timezone, `:78-93` CAN bitrate, `:95-118` chattr, `:159-202` Wi-Fi) |
+| Hostname, machine-id reset, UI database seeding | [`flyos-set-hostname`](teardown/flyos-glue.md#flyos-set-hostname) |
+| zram swap, `/var/log` on zram, journald cap | [`flyos-init-zram`](teardown/flyos-glue.md#flyos-init-zram) |
+| Governor and IRQ affinity | [`flyos-init-hard`](teardown/flyos-glue.md#flyos-init-hard) |
+| User-facing config surface | [`config.txt`](teardown/flyos-glue.md#configtxt) |
+| Config → U-Boot env → kernel cmdline | [`boot.scr.txt:52-54, 84-101, 124-125`](teardown/flyos-glue.md#boot) |
+| Service gating on cmdline flags | [`klipper.service:7`](teardown/flyos-glue.md#klipperservice), `klipper-mcu.service:7-8` |
 | Real-time pinning | `boot.scr.txt:97-98` + `klipper.service:14-16` + `moonraker.service:14-15` |
-| CAN bring-up | `analysis/flyos-glue/network/99-can.network`, `99-can-link.link` |
-| Stable block-device naming, sunxi H3/H5/H618 handling | `analysis/flyos-glue/scripts/flyos-blk-links` |
-| Boot/config partition mounting | `analysis/flyos-glue/scripts/flyos-mounts` |
-| Web stack config (nginx site is upstream-standard) | `analysis/flyos-glue/web/` |
-| Moonraker config as shipped (open trust, zeroconf off) | `analysis/flyos-glue/config/moonraker.conf` |
-| Moonraker SD-device fix | `analysis/moonraker-vendor.patch:618-661` |
-| Full teardown, versions, patch analysis | `analysis/FlyOS-Fast-1.3.8-inventory.md` |
+| CAN bring-up | [`99-can.network`](teardown/flyos-glue.md#network-files), `99-can-link.link` |
+| Stable block-device naming, sunxi H3/H5/H618 handling | [`flyos-blk-links`](teardown/flyos-glue.md#flyos-blk-links) |
+| Boot/config partition mounting | [`flyos-mounts`](teardown/flyos-glue.md#flyos-mounts) |
+| Web stack config (nginx site is upstream-standard) | [the web server files](teardown/flyos-glue.md#web-server) |
+| Moonraker config as shipped (open trust, zeroconf off) | [`moonraker.conf`](teardown/flyos-glue.md#moonrakerconf) |
+| Moonraker SD-device fix | [Moonraker patch](teardown/flyos-glue.md#moonraker-patch) |
+| Full teardown, versions, patch analysis | `docs/teardown/FlyOS-Fast-1.3.8-inventory.md` |
 
 ## 20. Validation log
 
-2026-09-03 — every file/line reference above was re-read from `analysis/flyos-glue/` and the inventory; external claims were checked against upstream sources. What changed from the first draft:
+2026-09-03 — every file/line reference above was re-read from the extracted vendor files (described in [`teardown/flyos-glue.md`](teardown/flyos-glue.md)) and the inventory; external claims were checked against upstream sources. What changed from the first draft:
 
 | Claim | Was | Now | Source |
 |---|---|---|---|
@@ -463,7 +463,6 @@ Everything below was written 2026-09-03 and runs without hardware. `sh tests/run
 | Path | What | Verified |
 |---|---|---|
 | `build/build.sh` | host wrapper: `docker run --privileged --platform linux/arm64 debian:trixie` | syntax |
-| `build/queue-cm5.sh` | waits for a running CB1 build, then starts CM5 — emulation is CPU-bound, so builds run one at a time | used for the CM5 runs |
 | `.github/workflows/build.yml` | both boards on native arm64 runners; a `v*` tag publishes `.img.xz` + `.sha256` to a release (§21.5) | **never run — no git remote yet** |
 | `build/in-container.sh` | installs tools, runs `mmdebstrap`, assembles the image | syntax; first real run in progress, see 21.3 |
 | `build/packages.txt` | the whole Debian package list, one place | — |
@@ -550,7 +549,7 @@ Untested: no git remote is configured yet, so the workflow has never executed.
 grows `KOS-DATA`, sets hostname and `/etc/hosts`, installs `ssh_key`, imports a real `printer_data`; discovery
 matches the Nitehawk 36 (USB) by serial and the M5P's STM32G0B1 USB-to-CAN bridge by `canbus_uuid`; Mainsail on :80;
 `Printer is ready` with `mcu` (CAN bridge), `host` (Linux MCU) and `nitehawk`. Boot 9.9 s, Klippy ready 10.9 s after
-kernel start. A full 85-minute print ran with 0 timer errors and 0 retransmits. Benchmarks: [BENCHMARKS.md](BENCHMARKS.md).
+kernel start. A full 85-minute print ran with 0 timer errors and 0 retransmits. Benchmarks: [benchmarks.md](benchmarks.md).
 
 **CB1 image built and inspected** (`kos-cb1-20261019`); not booted yet. Test target: the same M5P in Sindri.
 
@@ -575,7 +574,7 @@ Decisions made on hardware:
 
 - **Mainsail replaces Fluidd** (§4): the owner's configs `[include mainsail.cfg]`; no performance reason was recorded for Fluidd. `mainsail-config` is cloned and linked.
 - **Klipper host MCU is built in** (§15 resolved): `/usr/local/bin/klipper_mcu`, enabled by `kos-config` only when a config uses `klipper_host_mcu`.
-- **Recycle bin:** `trash-cli`, interactive `rm` aliased to `trash-put`, hourly purge of items over 30 days old and oldest-first while `/` or `printer_data` has under 10 % free. Web UI deletes go through Moonraker and skip it, by design. On-device test (`tests/trash_on_device.sh`) not yet run.
+- **Recycle bin:** `trash-cli`, interactive `rm` aliased to `trash-put`, hourly purge of items over 30 days old and oldest-first while `/` or `printer_data` has under 10 % free. Web UI deletes go through Moonraker and skip it, by design. On-device test (`tests/device/trash_on_device.sh`) not yet run.
 
 Hardware findings, not KOS bugs:
 

@@ -89,7 +89,7 @@ Saved alongside this report:
 - `userland-binaries.txt` — 979 entries from `/usr/bin` + `/usr/sbin`
 - `shared-libs.txt` — 556 versioned shared libraries
 - `python-site-packages.txt` — 154 entries in `/usr/lib/python3.11/site-packages`
-- `../rootfs-list.txt` — all 44,555 paths in the rootfs
+- `rootfs-list.txt` — all 44,555 paths in the rootfs
 
 Notable versions:
 
@@ -103,7 +103,7 @@ Notable versions:
 | Caddy | v2 |
 | OpenSSH | 10.0 (sshd) |
 | NetworkManager | 1.52.1 |
-| ttyd | 1.3.0 (web shell on :8888, `--writable`, runs `/usr/bin/login`) |
+| ttyd | 1.3.0 (web terminal, see §9) |
 | Also present | ffmpeg, mpv, ustreamer, mjpg_streamer, v4l-utils, hostapd, wpa_supplicant, udhcpd, ntpd, polkit, Xorg + GTK3 stack, git, gcc-arm-none-eabi (in `/opt`) |
 
 Python packages of note (system site-packages, no wheels/venv baked in): numpy, scipy, matplotlib, Pillow, tornado (both 6.2 and 6.5.2 present), msgspec, msgpack, uvicorn, uvloop, zeroconf, python-can, pyserial, pyserial-asyncio, GitPython, PyGObject, sdbus-networkmanager, dbus-fast, dbus-next, streaming-form-data, preprocess-cancellation, zstandard, lmdb, libnacl, jinja2, distro, psutil, pyudev.
@@ -127,15 +127,15 @@ Python packages of note (system site-packages, no wheels/venv baked in): numpy, 
 
 All git metadata was stripped (no `.git` anywhere), so Moonraker's update manager cannot operate — consistent with the read-only-root/OTA model.
 
-Klipper printer data lives at `/usr/share/printer_data` (not `~/printer_data`), and `moonraker.conf` uses `klippy_uds_address: /usr/share/printer_data/comms/klippy.sock`, `provider: systemd_cli`, wide-open `trusted_clients` (`0.0.0.0/0`, `::/0`) and `cors_domains: *`.
+Klipper printer data lives at `/usr/share/printer_data` (not `~/printer_data`), and `moonraker.conf` uses `klippy_uds_address: /usr/share/printer_data/comms/klippy.sock`, `provider: systemd_cli`, a `trusted_clients` list that trusts every address, and `cors_domains` open to every origin.
 
 ## 7. Vendor source modifications
 
-Generated patches (image vs. the closest-matching upstream commit) are in this directory:
+Patches were generated as image vs. the closest-matching upstream commit. They are not in this repository; [`flyos-glue.md`](flyos-glue.md#vendor-patches) describes what each one changes:
 
-- `klipper-vendor.patch` — 28 files, 89 hunks, vs `02cfc65e`
-- `moonraker-vendor.patch` — 4 files, vs `9008485`
-- `klipperscreen-vendor.patch` — 39 files (excluding locales), vs `3fab8d60`
+- Klipper — 28 files, 89 hunks, vs `02cfc65e`
+- Moonraker — 4 files, vs `9008485`
+- KlipperScreen — 39 files (excluding locales), vs `3fab8d60`
 
 The upstream commit for each was chosen by minimizing the number of differing files across the April–May 2026 window, so the residual diff is mostly vendor work rather than version drift. A handful of hunks will still be drift; treat the patches as a starting point, not a certified patch series.
 
@@ -184,7 +184,7 @@ Custom binaries:
 - `/usr/bin/fly-psplash` — boot splash with a status label; scripts push progress strings into it
 - `/usr/sbin/flyos-serial-autologin`
 
-Shell glue in `/usr/lib/flyos/` (all readable, all bash/sh):
+Shell glue in `/usr/lib/flyos/` (all readable, all bash/sh; each one is described in [`flyos-glue.md`](flyos-glue.md#scripts)):
 
 `flyos-init` (pre-systemd, §2), `flyos-config`, `flyos-firstrun`, `flyos-mounts`, `flyos-automount`, `flyos-blk-links`, `flyos-netinit`, `flyos-net-wait-online`, `flyos-nginx`, `flyos-caddy`, `flyos-display-init`, `flyos-psplash`, `flyos-resizefs`, `flyos-init-zram`, `flyos-init-swap`, `flyos-init-hard`, `flyos-init-venv`, `flyos-klippy-guardian`, `flyos-set-hostname`, `flyos-login-welcome`.
 
@@ -205,20 +205,20 @@ Performance tuning worth noting: `klipper.service` runs with `CPUAffinity=3`, `N
 | 80 | nginx `default` site |
 | 9080 | nginx → Fluidd (`root /data/fluidd`), proxying `/websocket` and `/(printer\|api\|access\|machine\|server)/` to moonraker |
 | 9081 | nginx → Mainsail |
-| 7125 | Moonraker (`host: 0.0.0.0`, auth effectively disabled by `trusted_clients: 0.0.0.0/0`) |
+| 7125 | Moonraker, on all interfaces, trusting every address (authentication effectively off) |
 | 8080-8083 | Crowsnest webcam streams |
-| 8888 | ttyd, writable root shell over HTTP, no auth configured |
+| — | ttyd web terminal: a root login in the browser, no authentication of its own |
 | 22 | OpenSSH 10.0 |
 
 Caddy is present with `Caddyfile-f` / `Caddyfile-m` (fluidd/mainsail) selected by `flyos-caddy` from `klipper_webui=`, as an alternative to the nginx path.
 
-Security posture, for the record: `ttyd`, `sshd`, `nginx`, `moonraker` and `flyos-fast-ota` are all enabled in `multi-user.target.wants`. Root has a fixed SHA-256 crypt password baked into `/etc/shadow`, so every shipped unit shares one credential; ttyd on :8888 is `--writable` and unauthenticated, and Moonraker trusts `0.0.0.0/0`. Any derivative of this image should get a fresh root password, ttyd disabled or authenticated, and a real `trusted_clients` list before it touches a network you do not control.
+Security posture, for the record: `ttyd`, `sshd`, `nginx`, `moonraker` and `flyos-fast-ota` are all enabled in `multi-user.target.wants`. Every shipped unit shares one root password, the web terminal puts that root login on the network with no authentication of its own, and Moonraker trusts every address. Any derivative of this image should get its own credentials, no web shell open to the network, and a real `trusted_clients` list before it touches a network you do not control. KOS ships no web terminal.
 
 ## 10. Reproducing this without the Mellow specifics
 
 What is genuinely Mellow-proprietary and unavailable: the Buildroot external tree, the kernel tree (`5.10.85-v3.0-flyos`), `flyos-fast-ota` (Go source), `flyos-info.ko` source, `fly-psplash`, `fly-flash`, and the OTA signing key. GPL components (kernel, BusyBox, glibc-linked userland) are source-available on request in principle; nothing is published today.
 
-What is fully recoverable from this image and reusable as-is: every `/usr/lib/flyos/*` shell script, all systemd units, the nginx/Caddy configs, `boot.scr` (readable with `strings`), the device-tree overlays, and the three application patch sets in this directory.
+What is fully readable from this image: every `/usr/lib/flyos/*` shell script, all systemd units, the nginx/Caddy configs, `boot.scr` (readable with `strings`), the device-tree overlays, and the three application patch sets ([`flyos-glue.md`](flyos-glue.md) describes them; they are not in this repository).
 
 Two practical rebuild paths:
 
@@ -233,11 +233,9 @@ For your case (no Pi-clone-specific vendor customizations, plus your own additio
 
 | Path | Contents |
 |---|---|
-| `analysis/klipper-vendor.patch` | Klipper diff vs upstream `02cfc65e` |
-| `analysis/moonraker-vendor.patch` | Moonraker diff vs upstream `9008485` |
-| `analysis/klipperscreen-vendor.patch` | KlipperScreen diff vs upstream `3fab8d60` |
-| `analysis/userland-binaries.txt` | 979 binaries in `/usr/bin` + `/usr/sbin` |
-| `analysis/shared-libs.txt` | 556 versioned `.so` files |
-| `analysis/python-site-packages.txt` | 154 site-packages entries |
+| `userland-binaries.txt` | 979 binaries in `/usr/bin` + `/usr/sbin` |
+| `shared-libs.txt` | 556 versioned `.so` files |
+| `python-site-packages.txt` | 154 site-packages entries |
 | `rootfs-list.txt` | 44,555-path listing of the rootfs |
+| `flyos-glue.md` | descriptions of the vendor's own files and the three patches (Klipper vs `02cfc65e`, Moonraker vs `9008485`, KlipperScreen vs `3fab8d60`); the files themselves are not kept |
 | `rootfs/`, `boot0/`, `boot1/`, `env4/`, `parts/` | extracted filesystems (~5.4 GB total) |

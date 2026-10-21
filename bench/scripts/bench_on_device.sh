@@ -1,5 +1,5 @@
 #!/bin/bash
-# Phase 1 benchmark (PLAN §16.1), no printer motion. Same script on every image under test:
+# Phase 1 benchmark (docs/plan.md §16.1), no printer motion. Same script on every image under test:
 #   KOS | stock Raspberry Pi OS Lite / Armbian minimal + KIAUH | the same stock install with KOS's cmdline.txt tuning.
 # Run on the printer host as the Klipper user, right after a cold boot, with the printer config loaded. Never on the
 # first boot after flashing or importing: that one grows the partition, makes host keys and imports the config.

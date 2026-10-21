@@ -1,6 +1,6 @@
 #!/bin/bash
-# On-device check of the recycle bin (PLAN K-70). Run on a booted KOS box as klipper:
-#   bash tests/trash_on_device.sh
+# On-device check of the recycle bin (docs/plan.md §21.6). Run on a booted KOS box as klipper:
+#   bash tests/device/trash_on_device.sh
 # Works on throwaway files in ~/printer_data/trash-test. The last step forces the low-space path,
 # which empties the WHOLE recycle bin of every user: run it on a test box, not a printer you care about.
 set -eu
