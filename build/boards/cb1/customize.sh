@@ -7,7 +7,18 @@ install -m 0644 /tmp/board/armbianEnv.txt /boot/armbianEnv.txt
 install -m 0644 /tmp/board/boot.cmd /boot/boot.cmd
 
 # apt >= 2.4 accepts ASCII-armored keys in signed-by, so no gpg in the image
-curl -fsSL "$BOARD_APT_KEY_URL" -o /usr/share/keyrings/armbian.asc
+python3 -I /tmp/board/pgp-fpr.py /tmp/board/armbian.asc "$BOARD_APT_KEY_FPR"
+install -m 0644 /tmp/board/armbian.asc /usr/share/keyrings/armbian.asc
+# Armbian's repo also carries base-files, bluez, firmware and more: take only the boot packages from it (first match wins).
+cat > /etc/apt/preferences.d/kos-armbian <<EOF
+Package: linux-image-* linux-dtb-* linux-u-boot-*
+Pin: origin apt.armbian.com
+Pin-Priority: 500
+
+Package: *
+Pin: origin apt.armbian.com
+Pin-Priority: -1
+EOF
 echo "$BOARD_APT_LINE" > /etc/apt/sources.list.d/armbian.list
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $BOARD_PACKAGES

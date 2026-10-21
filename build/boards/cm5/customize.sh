@@ -4,7 +4,12 @@ install -m 0644 /tmp/board/modprobe-display.conf /etc/modprobe.d/kos-display.con
 
 # Trixie's apt verifies with sqv, which rejects the key published at raspberrypi.gpg.key (SHA1 self-signature).
 # The keyring *package* carries a key that passes, so bootstrap from the .deb directly.
-curl -fsSL "$BOARD_KEYRING_DEB_URL" -o /tmp/keyring.deb && dpkg -i /tmp/keyring.deb
+curl -fsSL "$BOARD_KEYRING_DEB_URL" -o /tmp/keyring.deb
+echo "$BOARD_KEYRING_DEB_SHA256  /tmp/keyring.deb" | sha256sum -c -
+# Its copy in trusted.gpg.d would be trusted for every source, Debian's too; signed-by uses /usr/share/keyrings only.
+echo 'path-exclude=/etc/apt/trusted.gpg.d/raspberrypi-archive*' > /etc/dpkg/dpkg.cfg.d/kos-raspi-key
+dpkg -i /tmp/keyring.deb && rm -f /tmp/keyring.deb
+test ! -e /etc/apt/trusted.gpg.d/raspberrypi-archive.asc && test -e /usr/share/keyrings/raspberrypi-archive-keyring.gpg
 echo "$BOARD_APT_LINE" > /etc/apt/sources.list.d/raspi.list
 apt-get update
 # raspi-firmware first: its kernel/initramfs hooks must exist before the kernel packages run them.

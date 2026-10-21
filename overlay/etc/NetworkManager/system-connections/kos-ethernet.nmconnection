@@ -1,0 +1,14 @@
+# Wired DHCP on any Ethernet port, IPv4 only (IPv6 is off, docs/plan.md §11). Replaces NetworkManager's automatic
+# "Wired connection 1", which kos.conf's no-auto-default=* turns off. Must be root-owned 0600 (build/customize.sh).
+[connection]
+id=kos-ethernet
+type=ethernet
+autoconnect-priority=-999
+
+[ethernet]
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=disabled

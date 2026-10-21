@@ -1,19 +1,27 @@
 #!/bin/sh
-# Empties the recycle bin (trash-cli; every user, every volume). Run hourly by kos-trash-purge.timer.
+# Empties the recycle bin (trash-cli). Run hourly by kos-trash-purge.timer, as root.
 # Anything trashed more than 30 days ago goes; then, while / or printer_data has under 10% free,
 # the oldest remaining day goes, one day at a time, until there is room or the trash is empty.
+# Only the trash folders the rm alias (profile.d/kos-trash.sh) fills, for klipper and root: never a scan of every
+# volume, where any user could plant a trash folder that is a symlink to a root-owned directory.
 set -u
 DAYS=30
 MIN_FREE_PCT=10
+TRASH_DIRS=${KOS_TRASH_DIRS:-"/home/klipper/.local/share/Trash /home/klipper/printer_data/.Trash-1000
+    /root/.local/share/Trash /home/klipper/printer_data/.Trash-0 /config/.Trash-1000 /config/.Trash-0"}
 
-low() {
+low() {   # a df that fails (volume not mounted) counts as "not low": never purge on missing data
     for m in / /home/klipper/printer_data; do
-        df -P "$m" | awk -v min="$MIN_FREE_PCT" 'NR==2 { exit !($4 * 100 / $2 < min) }' && return 0
+        df -P "$m" 2>/dev/null | awk -v min="$MIN_FREE_PCT" 'NR==2 { low = $4 * 100 / $2 < min } END { exit !low }' && return 0
     done
     return 1
 }
 
-purge() { trash-empty --all-users -f "$1"; }
+purge() {
+    for t in $TRASH_DIRS; do
+        [ -d "$t" ] && [ ! -L "$t" ] && [ ! -L "$t/files" ] && [ ! -L "$t/info" ] && trash-empty -f --trash-dir "$t" "$1"
+    done
+}
 
 purge "$DAYS"
 d=$DAYS
@@ -21,3 +29,4 @@ while [ "$d" -gt 0 ] && low; do
     d=$((d - 1))
     purge "$d"
 done
+exit 0

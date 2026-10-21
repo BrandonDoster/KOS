@@ -19,17 +19,29 @@ KEY = re.compile(r"^(?P<k>serial|canbus_uuid)\s*[:=]\s*(?P<v>\S*)(?P<rest>.*)$")
 
 
 def read_conf(path=CONF):
-    out = {}
+    """kos.conf, parsed exactly like cfg_lines in lib.sh (format described there; tests/test_lib_sh.sh compares them)."""
+    ws = " \t\r\n\v\f"
     try:
-        for line in open(path):
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            k, v = line.split("=", 1)
-            v = v.split(" #")[0].strip().strip("\"'")
-            out[k.strip()] = v
+        lines = open(path, encoding="utf-8", errors="replace").read().split("\n")
     except OSError:
-        pass
+        return {}
+    out, buf = {}, None
+    for ln in lines + [None]:
+        if ln is not None:
+            ln = ln.removesuffix("\r")
+            if buf is None and ln.lstrip(ws).startswith("#"):
+                continue
+            buf = ln if buf is None else buf + " " + ln.lstrip(ws)
+            if buf.endswith("\\"):
+                buf = buf[:-1].rstrip(ws)
+                continue
+        if buf is not None and "=" in buf:
+            k, v = buf.split("=", 1)
+            v = v.strip(ws)
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]
+            out[k.strip(ws)] = v
+        buf = None
     return out
 
 

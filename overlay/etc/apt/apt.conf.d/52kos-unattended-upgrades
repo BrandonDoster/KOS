@@ -1,0 +1,7 @@
+// KOS: Debian security updates only, never a reboot. Run by kos-security-updates.timer only while the printer is idle
+// (the stock apt-daily timers are masked). Replaces the origins list of 50unattended-upgrades.
+#clear Unattended-Upgrade::Origins-Pattern;
+Unattended-Upgrade::Origins-Pattern {
+        "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+};
+Unattended-Upgrade::Automatic-Reboot "false";

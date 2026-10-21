@@ -1,5 +1,6 @@
 # PLAN §7 mount options. Labels, not device names, so the layout can differ per board.
 LABEL=KOS-ROOT  /                          ext4   noatime,nodiratime,commit=120,errors=remount-ro  0 1
 LABEL=KOS-DATA  /home/klipper/printer_data ext4   noatime,nodiratime,commit=120,nofail             0 2
-LABEL=KOS /config                    vfat   sync,umask=000,nofail                            0 0
+# /config: klipper's (kos-mcu-discover writes there), unreadable to other users: kos.conf holds passwords and root acts on it.
+LABEL=KOS /config                    vfat   sync,uid=1000,gid=1000,fmask=0177,dmask=0077,nosuid,nodev,noexec,nofail 0 0
 tmpfs           /var/log                   tmpfs  size=50M,mode=0755,nosuid,nodev                  0 0

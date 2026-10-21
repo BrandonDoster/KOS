@@ -1,0 +1,11 @@
+[Unit]
+Description=KOS: Debian security updates, daily, when the printer is idle
+
+[Timer]
+# Monotonic, not calendar: no RTC, and a printer may only be on for a few hours. A skipped run tries again a day later.
+OnBootSec=1h
+OnUnitInactiveSec=1d
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

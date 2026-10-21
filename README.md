@@ -65,9 +65,17 @@ An excerpt of the shipped file. The full file, with every key documented, is
 # Hostname. The printer is reachable at http://<hostname>.local
 hostname=kos
 
-# Login for SSH and the console. User is always "klipper".
-# password=            # leave empty to disable password login
+# Other names the web UI and slicers may use for the printer (spaces or commas)
+# allowed_hosts=voron.lan
+
+# Login. User is always "klipper". No password= means password login is off.
+# password=
+# One key per ssh_key= line, as many as you like...
 # ssh_key=ssh-ed25519 AAAA... you@laptop
+# ssh_key=ssh-ed25519 AAAA... you@desktop
+# ...or several keys in one value, continued with '\'
+# ssh_key=ssh-ed25519 AAAA... you@laptop \
+#         ssh-ed25519 AAAA... you@desktop
 
 # Wi-Fi. Wired ethernet needs nothing.
 # wifi_ssid=
@@ -86,6 +94,24 @@ archive_path=Printed/{year}/{month}/
 ```
 
 The CM5-only keys (`carrier_dt`, `serial_console`, `sd_3v3_only`) are explained in the file itself.
+
+A `#` starts a comment only at the start of a line, so `password=a #b` sets the password `a #b`. A line ending in
+`\` continues on the next line, joined with one space. A value KOS cannot use (an invalid hostname, timezone, CAN
+bitrate or SSH key) is skipped with a warning, never silently: the warnings go to `KOS-WARNINGS.txt` on the KOS
+partition, to the banner shown when you log in, and to the journal (`journalctl -u kos-config`). The file
+disappears again once everything is fine.
+
+### Slicers and other apps
+
+Mainsail, Orca Slicer, PrusaSlicer and other Moonraker clients use `http://<printer>` or `http://<printer>.local`
+on port 80, with no port number. Moonraker itself only listens on the printer (`127.0.0.1:7125`); nginx on port 80
+passes the API through. Apps that used port 7125 directly, or found the printer through Moonraker's own mDNS
+service, need the address entered as `http://<printer>`.
+
+To protect against web pages that try to drive the printer through your browser, nginx answers only to the
+hostname, `<hostname>.local` and IP addresses, and rejects API requests sent by a page from another site.
+If you reach the printer under another name, such as `voron.lan` from your router or your own DNS name, add it
+to `allowed_hosts=` in `kos.conf`. The same goes for a Mainsail on another printer that should control this one.
 
 ### Finding your boards (MCU discovery)
 
@@ -114,11 +140,25 @@ To turn it off, set `archive_printed=off`. To preview a fix for an existing libr
 
 ### Logging in
 
-The user is always `klipper`, with passwordless `sudo`. Password login is off until you set `password=` in
-`kos.conf`. For SSH, set `ssh_key=`.
+The user is always `klipper`, with passwordless `sudo`. `kos.conf` is the only source of logins, and it is read
+on every boot, so removing a line revokes it:
+
+- **SSH keys:** one or more `ssh_key=` lines. `~/.ssh/authorized_keys` is not used, so `ssh-copy-id` does not
+  work. On the printer, `kos-ssh-key add "ssh-ed25519 AAAA... you@laptop"`, `kos-ssh-key list` and
+  `kos-ssh-key remove <number or comment>` edit `kos.conf` and take effect at once, without a reboot.
+- **Password:** `password=`. Without one, password login is off, over SSH and on the serial console alike.
 
 The local console (`tty1`) logs in as `klipper` automatically. This is the recovery path when the
-network fails. Anyone with physical access to the printer has a root shell.
+network fails. Anyone with physical access to the printer has a root shell. The serial console (CM5 GPIO
+UART, CB1 debug UART) asks for a password, so it needs `password=`.
+
+### Security updates
+
+KOS installs Debian security updates by itself (`unattended-upgrades`, `trixie-security` only), once a day and only
+while the printer is idle. Before each run it asks Moonraker; if a print is running or paused, Klippy is starting,
+or Moonraker does not answer, it skips that day. It never reboots. Debian restarts an updated service such as
+nginx or sshd as usual; Klipper and Moonraker are not touched. Klipper, Moonraker and Mainsail themselves update
+through Mainsail's update manager, as on any Klipper install. See [SECURITY.md](SECURITY.md) for what KOS trusts.
 
 ## Performance
 
@@ -172,15 +212,22 @@ build/build.sh cb1      # or: build/build.sh cm5
 Write the image to a card, for example on macOS: `sudo dd if=out/kos-cb1-<date>.img of=/dev/rdiskN bs=4m`.
 Check the disk number first; `dd` overwrites whatever you point it at.
 
-A GitHub Actions workflow ([.github/workflows/build.yml](.github/workflows/build.yml)) builds both boards on
-native arm64 runners and attaches compressed images to a release when a `v*` tag is pushed. It has not run yet,
-because the repository has no public remote. Released images will appear there.
+Every week GitHub Actions builds both boards from the newest Klipper, Moonraker and Mainsail and publishes them as
+a prerelease tagged `weekly-YYYYMMDD`. Weeklies are built and checked in CI but not booted on hardware; use them to
+try what is coming. A release (`v*`) is a weekly that was booted on real hardware and then republished unchanged.
+Each image has a `.sha256` file and a build provenance attestation; check that an image came from this repository's
+workflow with `gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS`. A fresh image starts with the
+versions in `build/pins.env`; after that Moonraker's update manager updates Klipper, Moonraker and Mainsail as
+usual. Images get Debian security updates (`trixie-security` and `trixie-updates` are configured) through `apt`
+and Mainsail's system update, and install the security ones automatically while the printer is idle
+(see [Security updates](#security-updates)).
 
 Checks that need no hardware:
 
 ```sh
 sh tests/run.sh                          # shell syntax, Python self-tests, config parser
 sh tests/mkimage_docker.sh               # real mkfs/sfdisk round-trip (needs Docker)
+sh tests/nginx_docker.sh                 # nginx Host/Origin checks against a stub Moonraker (needs Docker)
 sh tests/inspect_image.sh out/kos-cb1-*.img
 ```
 
@@ -209,6 +256,9 @@ sh tests/inspect_image.sh out/kos-cb1-*.img
 - **SD cards.** One 128 GB SDXC card hung on every warm reboot on the CM5 + Manta M5P; a 32 GB card did not. If your
   printer hangs on reboot but cold-boots fine, try `sd_3v3_only=on` in `kos.conf`.
 - **No real-time clock** on the tested setup: early log timestamps are wrong until NTP syncs.
+- **IPv4 only.** IPv6 is switched off in the kernel (`ipv6.disable=1`). An IPv6-only network cannot reach the printer.
+- **Trusted network.** Any device on your LAN can control the printer and, through it, the whole system
+  ([SECURITY.md](SECURITY.md)). Keep untrusted devices (guest Wi-Fi, IoT) on another network.
 
 ## Credits
 

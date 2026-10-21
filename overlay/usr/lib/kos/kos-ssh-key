@@ -1,0 +1,63 @@
+#!/bin/bash
+# SSH login keys for klipper. The ssh_key= entries in /config/kos.conf are the only source; this edits them and
+# rewrites sshd's key file at once (lib.sh apply_ssh_keys), so no reboot. ssh-copy-id cannot work: sshd ignores ~/.ssh.
+#   kos-ssh-key add "ssh-ed25519 AAAA... you@laptop"
+#   kos-ssh-key list
+#   kos-ssh-key remove <number from list | comment>
+L=/usr/lib/kos/lib.sh; [ -f "$L" ] || L=$(dirname "$0")/lib.sh
+# Root writes the key file; KOS_KEYS set means a test run against temp files.
+[ "$(id -u)" = 0 ] || [ -n "${KOS_KEYS:-}" ] || exec sudo "$0" "$@"
+# shellcheck source=lib.sh
+. "$L"
+die() { echo "kos-ssh-key: $*" >&2; exit 1; }
+body() { cut -d' ' -f1-2; }   # type + key data: what makes two keys the same
+
+# set_keys KEY...: replace every ssh_key entry in kos.conf with one ssh_key= line per key (comments stay).
+set_keys() {
+    local drop tmp
+    drop=$(cfg_lines ssh_key | awk '{ for (n = $1; n <= $2; n++) printf "%s ", n }')
+    tmp=$(mktemp "$KOS_CONF.XXXXXX") || exit 1
+    { awk -v drop=" $drop" 'index(drop, " " FNR " ") == 0' "$KOS_CONF"
+      if [ $# -gt 0 ]; then printf 'ssh_key=%s\n' "$@"; fi; } > "$tmp" && mv -f "$tmp" "$KOS_CONF"
+}
+
+apply() {
+    apply_ssh_keys
+    [ -s "$KOS_KEYS" ] || [ -n "$(cfg password)" ] || echo "kos-ssh-key: no key and no password left: SSH login is off (the local console still works)" >&2
+}
+
+[ -f "$KOS_CONF" ] || die "$KOS_CONF not found"
+keys=(); while IFS= read -r k; do keys+=("$k"); done < <(ssh_keys)   # no mapfile: tests run on macOS bash 3.2
+case ${1:-} in
+add)
+    shift; key=$*
+    [ "$(printf '%s\n' "$key" | split_keys | wc -l)" -eq 1 ] && valid_key "$key" ||
+        die "not a single valid public key (want: ssh-ed25519 AAAA... comment): $key"
+    for k in "${keys[@]}"; do
+        [ "$(body <<< "$k")" = "$(body <<< "$key")" ] && die "already there"
+    done
+    set_keys "${keys[@]}" "$key"
+    apply
+    grep -qF -- "$(body <<< "$key")" "$KOS_KEYS" || die "written to $KOS_CONF but not active: check that file"
+    echo "added; it works now" ;;
+list)
+    n=0
+    for k in "${keys[@]}"; do
+        n=$((n + 1))
+        printf '%d  %s\n' "$n" "$(printf '%s\n' "$k" | ssh-keygen -lf - 2>/dev/null || printf 'INVALID, ignored: %.60s' "$k")"
+    done
+    [ "$n" -gt 0 ] || echo "no ssh_key= in $KOS_CONF" ;;
+remove)
+    [ -n "${2:-}" ] || die "remove what? a number from 'kos-ssh-key list', or a key's comment"
+    keep=(); n=0
+    for k in "${keys[@]}"; do
+        n=$((n + 1))
+        if [ "$2" = "$n" ] || [ "$2" = "$(cut -s -d' ' -f3- <<< "$k")" ]; then echo "removing: $(printf '%.60s' "$k")"
+        else keep+=("$k"); fi
+    done
+    [ "${#keep[@]}" -lt "${#keys[@]}" ] || die "no key numbered or commented '$2' (see: kos-ssh-key list)"
+    set_keys "${keep[@]}"
+    apply ;;
+*)
+    echo usage:; sed -n '4,6s/^#//p' "$0"; exit 2 ;;
+esac

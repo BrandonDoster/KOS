@@ -1,7 +1,6 @@
 [Unit]
 Description=KOS: apply /config/kos.conf
 After=NetworkManager.service systemd-networkd.service config.mount home-klipper-printer_data.mount
-Requires=home-klipper-printer_data.mount
 Before=avahi-daemon.service ssh.service nginx.service kos-mcu-discover.service klipper.service moonraker.service
 
 [Service]

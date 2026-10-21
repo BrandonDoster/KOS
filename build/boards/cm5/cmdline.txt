@@ -1,1 +1,1 @@
-console=serial0,115200 console=tty1 root=LABEL=KOS-ROOT rootfstype=ext4 fsck.repair=yes rootwait consoleblank=0 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d
+console=serial0,115200 console=tty1 root=LABEL=KOS-ROOT rootfstype=ext4 fsck.repair=yes rootwait consoleblank=0 isolcpus=3 cpufreq.default_governor=performance video=HDMI-A-1:d ipv6.disable=1

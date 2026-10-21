@@ -1,0 +1,12 @@
+[Unit]
+Description=KOS: install Debian security updates while the printer is idle
+After=network-online.target moonraker.service
+
+[Service]
+Type=oneshot
+# Skipped (not failed) unless Moonraker says the printer is idle; unreachable counts as busy.
+ExecCondition=/usr/lib/kos/kos-printer-idle
+ExecStart=-/usr/bin/apt-get -q update
+ExecStart=/usr/bin/unattended-upgrade
+Nice=19
+IOSchedulingClass=idle

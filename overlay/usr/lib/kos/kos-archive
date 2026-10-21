@@ -12,18 +12,33 @@ CONF = os.environ.get("KOS_CONF", "/config/kos.conf")
 STATE = os.environ.get("KOS_ARCHIVE_STATE", os.path.expanduser("~/printer_data/.kos-archive.last"))
 URL = os.environ.get("MOONRAKER_URL", "http://127.0.0.1:7125")
 INTERVAL = 60
+DEFAULT_TEMPLATE = "Printed/{year}/{month}/"
 
 
 def read_conf(path=CONF):
-    out = {}
+    """kos.conf, parsed exactly like cfg_lines in lib.sh (format described there; tests/test_lib_sh.sh compares them)."""
+    ws = " \t\r\n\v\f"
     try:
-        for line in open(path):
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                out[k.strip()] = v.split(" #")[0].strip().strip("\"'")
+        lines = open(path, encoding="utf-8", errors="replace").read().split("\n")
     except OSError:
-        pass
+        return {}
+    out, buf = {}, None
+    for ln in lines + [None]:
+        if ln is not None:
+            ln = ln.removesuffix("\r")
+            if buf is None and ln.lstrip(ws).startswith("#"):
+                continue
+            buf = ln if buf is None else buf + " " + ln.lstrip(ws)
+            if buf.endswith("\\"):
+                buf = buf[:-1].rstrip(ws)
+                continue
+        if buf is not None and "=" in buf:
+            k, v = buf.split("=", 1)
+            v = v.strip(ws)
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]
+            out[k.strip(ws)] = v
+        buf = None
     return out
 
 
@@ -37,10 +52,24 @@ def api(method, url_path, **params):
         return json.load(r)["result"]
 
 
+def expand(template, t):
+    for k, v in (("year", f"{t.tm_year:04d}"), ("month", f"{t.tm_mon:02d}"), ("day", f"{t.tm_mday:02d}")):
+        template = template.replace("{" + k + "}", v)
+    return template.strip("/")
+
+
+def check_template(template):
+    """archive_path from kos.conf: relative, no '..', only {year} {month} {day}. Anything else -> the default."""
+    folder = expand(template, time.localtime(0))
+    if template.startswith("/") or "{" in folder or "}" in folder or ".." in folder.split("/") or not folder:
+        print(f"archive_path {template!r} is invalid (relative path; only {{year}} {{month}} {{day}}; no '..'): "
+              f"using {DEFAULT_TEMPLATE}", file=sys.stderr, flush=True)
+        return DEFAULT_TEMPLATE
+    return template
+
+
 def dest_for(filename, end_time, template):
-    t = time.localtime(end_time)
-    folder = template.format(year=f"{t.tm_year:04d}", month=f"{t.tm_mon:02d}", day=f"{t.tm_mday:02d}").strip("/")
-    return folder, os.path.basename(filename)
+    return expand(template, time.localtime(end_time)), os.path.basename(filename)
 
 
 def unique_name(existing, name):
@@ -78,7 +107,7 @@ def archive_job(job, template, dry):
 
 
 def run(once=False, backfill=False, dry=False):
-    template = read_conf().get("archive_path", "Printed/{year}/{month}/")
+    template = check_template(read_conf().get("archive_path", DEFAULT_TEMPLATE))
     last = "" if backfill else (open(STATE).read().strip() if os.path.exists(STATE) else "")
     while True:
         try:
@@ -138,6 +167,9 @@ def test():
     assert all(c["source"] == "gcodes/a.gcode" for c in calls)   # cancelled b.gcode and already-archived z.gcode skipped
     assert unique_name({"x.gcode", "x-2.gcode"}, "x.gcode") == "x-3.gcode"
     assert open(STATE).read() == "000004"
+    for bad in ("../../config/{year}", "/etc", "{year.__class__}", "Printed/{yr}", "a/../b", ""):
+        assert check_template(bad) == DEFAULT_TEMPLATE, bad
+    assert check_template("Done/{year}-{month}-{day}") == "Done/{year}-{month}-{day}"
     print("ok")
 
 

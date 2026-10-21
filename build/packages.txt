@@ -13,3 +13,5 @@ python3 python3-venv python3-dev python3-numpy
 build-essential libffi-dev libsodium23 libjpeg62-turbo libopenjp2-7 zlib1g
 # moonraker [machine] via dbus/polkit, system updates via packagekit
 polkitd packagekit
+# Debian security updates while the printer is idle (kos-security-updates.timer)
+unattended-upgrades

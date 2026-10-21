@@ -1,7 +1,7 @@
 # Upstream nginx site for Mainsail/Fluidd (as FlyOS ships it, see docs/teardown/flyos-glue.md#web-server), path and log locations adjusted.
+# KOS: IPv4 only (IPv6 is off, docs/plan.md §11); Host and Origin checks from conf.d/kos-hosts.conf.
 server {
     listen 80 default_server;
-    listen [::]:80 default_server;
     access_log off;
     error_log /var/log/nginx/error.log;
     gzip on;
@@ -14,9 +14,11 @@ server {
     server_name _;
     client_max_body_size 0;
     proxy_request_buffering off;
+    if ($kos_host_ok = 0) { return 421; }
     location / { try_files $uri $uri/ /index.html; }
     location = /index.html { add_header Cache-Control "no-store, no-cache, must-revalidate"; }
     location /websocket {
+        if ($kos_origin_ok = 0) { return 403; }
         proxy_pass http://apiserver/websocket;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -27,6 +29,7 @@ server {
         proxy_read_timeout 86400;
     }
     location ~ ^/(printer|api|access|machine|server)/ {
+        if ($kos_origin_ok = 0) { return 403; }
         proxy_pass http://apiserver$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
