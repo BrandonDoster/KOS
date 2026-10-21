@@ -7,7 +7,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 IMG=$(sed -n 's/^DEBIAN_IMAGE=//p' build/pins.env)
-docker run --rm -i --platform linux/amd64 --tmpfs /home/klipper/printer_data -v "$PWD:/src:ro" "$IMG" bash -eu <<'EOF'
+docker run --rm -i --platform linux/amd64 --tmpfs /home/klipper/printer_data:exec -v "$PWD:/src:ro" "$IMG" bash -eu <<'EOF'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null
 apt-get install -y -qq --no-install-recommends systemd sudo openssh-server unattended-upgrades tzdata python3 perl >/dev/null 2>&1
@@ -89,7 +89,7 @@ grep -q "moonraker.conf: \[server\] host was '0.0.0.0', set to 127.0.0.1" /confi
 ok "kos-config boot 1: hostname, hosts map, timezone, password, key, wifi, CAN, display, import, warnings"
 
 echo 'printer.cfg from the card' > /config/printer.cfg
-printf 'hostname=bad_name\ntimezone=../../../etc/shadow\nwifi_ssid=\ncan_bitrate=fast\n' > /config/kos.conf
+printf 'hostname=bad_name\nallowed_hosts=printer.lan\ntimezone=../../../etc/shadow\nwifi_ssid=\ncan_bitrate=fast\n' > /config/kos.conf
 echo '[mcu host]' > $P/host.cfg; echo 'serial: /tmp/klipper_host_mcu' >> $P/host.cfg
 boot
 [ "$(cat /etc/hostname)" = voron ] && [ "$(readlink /etc/localtime)" = /usr/share/zoneinfo/Etc/UTC ] || exit 1
