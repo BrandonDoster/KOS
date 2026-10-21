@@ -1,0 +1,33 @@
+ÂBô§=¯@ŒÂÂBæ¦Æ#¤c§í¡!¦ç£ÒR#ˆõä¦Œça##Ö$„Bô¶GaïÒ÷õ@B¶÷#¯»B@†ac[!p]104[?7h[6n[32766;32766H[6n[   65.786071] zram0: detected capacity change from 4146304 to 0
+[   65.828158] zram: Removed device: zram0
+[   66.387025] EXT4-fs (mmcblk0p4): unmounting filesystem 18c2962e-0743-4e79-91ec-c16ef6f6dd6c.
+[   66.856413] brcmfmac: brcmf_cfg80211_set_power_mgmt: power save enabled
+[   66.984705] systemd-journald[217]: Received client request to relinquish /var/log/journal/e2117f7c244a4c3b942e0e11d0ad58ed access.
+[   67.056278] watchdog: watchdog0: watchdog left running
+[   67.061928] systemd-shutdown[1]: Using hardware watchdog 'Broadcom BCM2835 Watchdog timer', version 0, device /dev/watchdog0
+[   67.061950] systemd-shutdown[1]: Watchdog running with a hardware timeout of 10min.
+[   67.093144] systemd-shutdown[1]: Syncing filesystems and block devices.
+[   67.098416] systemd-shutdown[1]: Sending SIGTERM to remaining processes...
+[   67.101770] systemd-journald[217]: Received SIGTERM from PID 1 (systemd-shutdow).
+[   67.116620] systemd-shutdown[1]: Sending SIGKILL to remaining processes...
+[   67.119325] systemd-shutdown[1]: Unmounting file systems.
+[   67.119911] (sd-umount)[760]: Unmounting '/run/credentials/systemd-journald.service'.
+[   67.123994] (sd-remount)[761]: Remounting '/' read-only with options 'errors=remount-ro,commit=120'.
+[   67.153939] EXT4-fs (mmcblk0p3): re-mounted 0833f96f-d905-4aa8-8a52-d97ec27e0235 ro.
+[   67.162945] systemd-shutdown[1]: All filesystems unmounted.
+[   67.162958] systemd-shutdown[1]: Deactivating swaps.
+[   67.162973] systemd-shutdown[1]: All swaps deactivated.
+[   67.162976] systemd-shutdown[1]: Detaching loop devices.
+[   67.163975] systemd-shutdown[1]: All loop devices detached.
+[   67.163980] systemd-shutdown[1]: Stopping MD devices.
+[   67.164037] systemd-shutdown[1]: All MD devices stopped.
+[   67.164041] systemd-shutdown[1]: Detaching DM devices.
+[   67.164081] systemd-shutdown[1]: All DM devices detached.
+[   67.164086] systemd-shutdown[1]: All filesystems, swaps, loop devices, MD devices and DM devices detached.
+[   67.164091] watchdog: watchdog0: watchdog left running
+[   67.164684] systemd-shutdown[1]: Syncing filesystems and block devices.
+[   67.164976] systemd-shutdown[1]: Rebooting.
+[   67.194662] macb 1f00100000.ethernet end0: Link is Down
+[   67.195749] macb 1f00100000.ethernet: gem-ptp-timer ptp clock unregistered.
+[   67.210494] kvm: exiting hardware virtualization
+[   67.252824] reboot: Restarting system

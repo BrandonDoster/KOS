@@ -1,180 +1,100 @@
-# klipperOS — FlyOS-Fast H3 v1.3.8 teardown
+# KOS
 
-Reverse-engineering notes for Mellow's **FlyOS-Fast v1.3.8 (Allwinner H3)** image, with the goal of building an equivalent Klipper OS without the Fly-hardware-specific customizations.
+> Named after Kos, the Greek island, as a nod to Klipper. Settled 2026-10-19 (was the working name "klipperOS").
 
-Mellow publishes no build docs, no Buildroot tree, and no kernel source for this image. Everything here was recovered from the shipped `.img`.
+A lightweight Debian 13 (trixie) image for running Klipper on **Raspberry Pi CM5** and **BigTreeTech CB1**, with CM4 as a build-only bonus target.
 
-**Start here:** [`analysis/FlyOS-Fast-1.3.8-inventory.md`](analysis/FlyOS-Fast-1.3.8-inventory.md) — the full inventory: partition layout, boot chain, base distro evidence, kernel, package set, per-app patch analysis, network surface, and two rebuild paths.
+The goal, and the acceptance test for V1: flash the card, drop your existing `printer.cfg` on it, boot, and the machine is print-ready — CAN and USB toolhead boards found automatically, web UI on port 80, reachable at `http://<hostname>.local`.
 
----
+> **Status: unreleased.** The **CM5** image boots and prints on real hardware (CM5 Lite on a BTT Manta M5P, 2026-10-19; see [PLAN.md §21.6](PLAN.md#216-hardware-log-first-boots-2026-10-19) and [BENCHMARKS.md](BENCHMARKS.md)). The **CB1** image builds and passes offline inspection but **has not been booted yet**. See [PLAN.md §21](PLAN.md#21-implementation-status) for exactly what is verified and what is not.
 
-## Source artifact
+## What's in it
 
 | | |
 |---|---|
-| File | `FlyOS-Fast-H3-v1.3.8.img.7z` (1,189,690,236 bytes) |
-| SHA-256 (`.7z`) | `12183cd72c71d2411db911ae7589f2d53c74cbab1cc80c0f14063ba976f1ad87` |
-| SHA-256 (`.img`) | `d6540759ac2e0fd4a4b3c421d61c99c322c4f6cd5ad0c3185092f445c9a59c70` |
-| Image version | `FlyOS-Fast v1.3.8-g991092eae1`, built 2026-05-13 03:49:03 |
-| Target | Allwinner H3 (sun8i), armv7hf — Fly Lite2 / Lite2.1 / MiniPad |
+| Base | Debian 13 (trixie), arm64, writable root, working `apt` |
+| Kernel | Raspberry Pi `linux-image-rpi-2712` + `-v8` (CM5/CM4) · Armbian `linux-image-current-sunxi64` (CB1) |
+| Printer stack | Klipper, Moonraker, Mainsail, nginx — git checkouts so Moonraker's `update_manager` works |
+| Tuning | `isolcpus=3` + `CPUAffinity=3` on Klippy, `performance` governor, IRQs steered off the isolated core, zram swap, logs in RAM |
+| Not included | Xorg/GTK/KlipperScreen, DSF/RRF, camera stack by default, MCU toolchain, A/B root, OTA |
 
-The `.7z` is not tracked here (1.1 GB). Get it from Mellow's download page or copy it across; verify the SHA-256 above before trusting any of these notes against it.
+Image size: ~3.5 GB written, rootfs ~1.3 GB.
+
+## Quick start
+
+1. Grab `kos-<board>-<date>.img.xz` from [Releases](../../releases) and write it with Raspberry Pi Imager, balenaEtcher, or `xz -dc image.img.xz | sudo dd of=/dev/rdiskN bs=4m`.
+2. The card mounts a small FAT partition labelled **KOS** on any OS. Edit `kos.conf` on it — hostname, Wi-Fi, timezone, CAN bitrate, display.
+3. Optionally put your config on the same partition, next to `kos.conf`: a single `printer.cfg`, your `config/` folder, or a whole `printer_data/` folder (so the path reads `KOS/printer_data/config/printer.cfg`).
+4. Boot. Open `http://<hostname>.local`.
+
+`kos.conf` is re-read on **every** boot, so changing Wi-Fi or hostname later means editing the card, not re-flashing.
+
+### MCU discovery
+
+A config copied from another machine names its boards by serial or CAN UUID, and those strings don't survive the move. On each boot, before Klipper starts, KOS scans `*.cfg` for `serial:`/`canbus_uuid:` values that no longer resolve and rewrites them in place from the boards actually attached. Your section names, pin references and comments are untouched, and the original is kept as `<file>.orig`.
+
+It refuses to guess: if two candidate boards could fit one slot, nothing is written and `MCU-DISCOVERY.txt` lands on the FAT partition listing what it saw. Pin the answer with `main_mcu_serial=` / `toolhead_uuid=` in `kos.conf`.
+
+### Gcode archiving
+
+A large flat gcode root is the single biggest cause of Fluidd/Mainsail "failed to connect, retry" prompts: on a CB1 with 1,234 files, one directory listing burns 4.4 s inside Moonraker's event loop and the websocket keepalive dies behind it. KOS files successfully printed jobs into `Printed/YYYY/MM/` via Moonraker's own move API, keeping every directory small. `archive_printed=off` disables it; `kos-archive --backfill --dry-run` previews the fix for an existing library. Measurements in [PLAN.md §17](PLAN.md#17-gcode-library-management--archive-printed-files).
+
+## Building
+
+Needs Docker with arm64 emulation. About 35 min per board on an x86 Mac, mostly pip under qemu.
+
+```sh
+build/build.sh cb1      # or: cm5
+# → out/kos-cb1-<date>.img
+```
+
+Tagging `v*` builds both boards on GitHub Actions (native arm64 runners) and attaches the compressed images to a release. `.github/workflows/build.yml` also runs on `workflow_dispatch`.
+
+Everything checkable without hardware:
+
+```sh
+sh tests/run.sh              # shell syntax, three Python self-tests, config parser
+sh tests/mkimage_docker.sh   # real mkfs/sfdisk round-trip, needs Docker
+sh tests/inspect_image.sh out/kos-cb1-*.img
+```
 
 ## Repository layout
 
-Small, worth keeping / committing:
-
-| Path | What it is |
+| Path | What |
 |---|---|
-| `README.md` | this file |
-| `analysis/FlyOS-Fast-1.3.8-inventory.md` | the main report |
-| `analysis/klipper-vendor.patch` | Klipper diff vs upstream `02cfc65e` (28 files, 89 hunks) |
-| `analysis/moonraker-vendor.patch` | Moonraker diff vs upstream `9008485` (4 files) |
-| `analysis/klipperscreen-vendor.patch` | KlipperScreen diff vs upstream `3fab8d60` (39 files, locales excluded) |
-| `analysis/userland-binaries.txt` | 979 binaries from `/usr/bin` + `/usr/sbin` |
-| `analysis/shared-libs.txt` | 556 versioned shared libraries |
-| `analysis/python-site-packages.txt` | 154 site-packages entries |
-| `analysis/flyos-glue/` | the vendor's own files, copied out verbatim (81 files, see below) |
-| `rootfs-list.txt` | all 44,555 paths in the root filesystem |
+| `PLAN.md` | The design document: every decision, why, what's still open, implementation status |
+| `TEARDOWN.md` | Reverse-engineering notes on Mellow's FlyOS-Fast, which this project started from |
+| `build/` | `build.sh` (host wrapper) → `in-container.sh` (mmdebstrap) → `customize.sh` (chroot) → `mkimage.py` (partitioning, no loop devices) |
+| `build/boards/{cb1,cm5}/` | The only board-specific code: kernel packages, boot files, partition layout |
+| `build/config-partition/` | The `kos.conf` template shipped on the FAT partition |
+| `overlay/` | Files copied verbatim into the rootfs: systemd units, fstab, nginx, and the `kos-*` tools |
+| `analysis/` | FlyOS teardown output — vendor scripts/units/configs extracted, and three patch sets vs upstream |
+| `tests/` | The no-hardware gate |
+| `research/`, `out/` | Untracked: the source `.img` extract and build artifacts |
 
-Large, regenerable, do not commit (≈8.4 GB total):
+## Credits
 
-```
-FlyOS-Fast-H3-v1.3.8.img   parts/   rootfs/   boot0/   boot1/   env4/
-```
+Built on the work of others, none of it affiliated with this project:
 
-Not a git repo yet. If you want to sync this to another machine: `git init && git add README.md analysis rootfs-list.txt` — that stages ~1.3 MB and leaves the big extracts behind. Add a `.gitignore` with the six paths above.
+- **[Klipper](https://github.com/Klipper3d/klipper)** (Kevin O'Connor), **[Moonraker](https://github.com/Arksine/moonraker)** (Eric Callahan), **[Mainsail](https://github.com/mainsail-crew/mainsail)** (mainsail-crew) — the printer stack.
+- **[Armbian](https://github.com/armbian/build)** — the CB1 kernel, U-Boot, DTBs and boot script. The `boot-sun50i-next.cmd` script and the sunxi U-Boot write offset are taken from their build system.
+- **[Raspberry Pi](https://github.com/raspberrypi/rpi-image-gen)** — `raspi-firmware`, the CM5/CM4 kernels, and the boot-partition layout, which follows `rpi-image-gen`'s Pi layer.
+- **[Debian](https://www.debian.org/)** and **[mmdebstrap](https://gitlab.mister-muffin.de/josch/mmdebstrap)** — the base system and the builder.
+- **Mellow's FlyOS-Fast** — not used as code (it's 32-bit Buildroot), but its design was the starting point. The provisioning-file-on-a-FAT-partition idea, the CAN `.network`/`.link` files, the mount options and the real-time pinning all come from reading their image. See [TEARDOWN.md](TEARDOWN.md).
+- The **[mainline-Armbian-on-CB1](https://github.com/armbian/build/pull/9584)** community reports, for the CAN queue-length and Wi-Fi power-save findings.
 
-## `analysis/flyos-glue/` — the vendor's own code, extracted
+KOS's own scripts deliberately do **not** copy FlyOS's network posture: no baked-in root password, no unauthenticated root shell on a TCP port, no `trusted_clients: 0.0.0.0/0`.
 
-These are the parts that are *not* upstream anything. They survive deleting the 5.4 GB extract, so the repo stays useful on its own.
+## Known tradeoffs
 
-| Path | Contents |
-|---|---|
-| `scripts/` | all 21 FlyOS shell scripts: `flyos-init` (the pre-systemd overlay/resize init — this is the whole appliance trick), `flyos-config`, `flyos-firstrun`, `flyos-mounts`, `flyos-netinit`, `flyos-caddy`, `flyos-nginx`, `flyos-display-init`, `flyos-init-{zram,swap,hard,venv}`, `flyos-resizefs`, `flyos-klippy-guardian`, `flyos-psplash`, etc. |
-| `systemd/` | 32 units: `klipper.service`, `moonraker.service`, `klipperscreen.service`, `klipper-mcu.service`, `crowsnest.service`, `moon2uart.service`, `ttyd.service`, `nginx.service`, all `flyos-*` units, the four DSF/Duet units. Includes two shipped-but-disabled units: `flyos-klippy-guardian.service.disable`, `flyos-x-start.service.disable`. |
-| `web/` | `nginx.conf`, `sites-available/{default,fluidd,mainsail}`, `conf.d/{common_vars,upstreams}.conf`, `Caddyfile-f`, `Caddyfile-m` |
-| `config/` | shipped `config.txt` (the user-facing provisioning surface), `printer.cfg`, `moonraker.conf`, `KlipperScreen.conf`, `crowsnest.conf`, `fluidd.cfg`, `mainsail.cfg`, `plr.cfg` |
-| `boot/` | `boot.scr.txt` (U-Boot script recovered with `strings`), `dtb-overlays.txt` (42 `sun8i-h3-*.dtbo` names) |
-| `klipper-added/` | `power_loss_resume.py`, `filament_blockage_detection.py` + `.c`, `led_effect.py` |
-| `moonraker-added/` | `fly_lcd.py`, `network.py` |
-| `klipperscreen-added/` | `fly_lcd.py`, `network_info.py`, `ota_client.py`, `ota_overlay.py` |
+- **Writable root.** A power cut mid-`apt` can corrupt the image. That is the price of having `apt` at all; FlyOS's read-only SquashFS + A/B answer is deferred to V2, and the fixed-size root plus separate data partition is there so V2 can adopt it without re-imaging anyone.
+- **CM4 is built but untested** — no hardware here.
+- **Wi-Fi on CB1** rides an out-of-tree Realtek RTL8189FS driver. Wired ethernet is the safe path for first boot.
 
-## Reproducing the extraction on another machine
+## License
 
-Only needs the `.7z` and 7-Zip. No mounting, no loopback, no Linux VM — 7-Zip reads MBR, ext4 and SquashFS directly.
+Copyright © 2026 Brandon Doster.
 
-```sh
-brew install sevenzip                        # or: apt install p7zip-full  (use 7z instead of 7zz)
+**[GNU AGPL-3.0-or-later](LICENSE)** — copyleft with the network clause. Modify it, ship it, run it as a service: the modified source has to be available to whoever uses it, with attribution intact.
 
-7zz x FlyOS-Fast-H3-v1.3.8.img.7z            # → .img  (2.16 GiB, ~6 s)
-7zz x FlyOS-Fast-H3-v1.3.8.img -oparts       # → parts/0.img … 4.img
-7zz x -orootfs   parts/2.img                 # rootfs   (SquashFS-zstd, 3.1 GB extracted)
-7zz x -oboot0    parts/0.img                 # /boot    (zImage, fly-h3.dtb, dtbs/, boot.scr)
-7zz x -oboot1    parts/1.fat                 # /config  (config.txt)
-7zz l parts/2.img | tail -n +27 > rootfs-list.txt   # 44,555-path index; grep this first
-```
-
-Gotcha: 7-Zip does not restore symlinks (363 skipped). Symlinked files land as empty files — e.g. `/etc/os-release` is empty; read `/usr/lib/os-release` instead. Same for `/bin`, `/lib`, `/sbin`.
-
-## Regenerating the vendor patches
-
-The three patches are image-vs-upstream diffs. The upstream commit for each was picked by minimizing the count of differing files across the April–May 2026 window, so the residual is mostly vendor work rather than version drift — but a few hunks will still be drift. Treat them as a starting point, not a certified patch series.
-
-```sh
-mkdir -p /tmp/upstream && cd /tmp/upstream
-git clone https://github.com/Klipper3d/klipper
-git clone https://github.com/Arksine/moonraker
-git clone https://github.com/KlipperScreen/KlipperScreen
-
-git -C klipper       checkout 02cfc65e   # 2026-05-07
-git -C moonraker     checkout 9008485    # 2026-05-07
-git -C KlipperScreen checkout 3fab8d60   # 2026-05-13
-```
-
-Then diff each upstream tree against `rootfs/data/<app>/`. The scripted form used to produce `analysis/*.patch`:
-
-```sh
-IMG=/path/to/klipperOS/rootfs/data
-cd /tmp/upstream/klipper
-for f in $(git ls-files | grep -vE '^(docs|test)/'); do
-  [ -f "$IMG/klipper/$f" ] || continue
-  cmp -s "$f" "$IMG/klipper/$f" || diff -u "$f" "$IMG/klipper/$f" \
-    --label "upstream/$f" --label "flyos/$f"
-done
-```
-
-(`comm -13` between `git ls-files` and a `find` of the image tree gives the *added* files instead.)
-
-## What the image actually is — one screen
-
-- **Base: Buildroot**, not Armbian/Debian. `libc.so.6` reports `GNU C Library (Buildroot) stable release version 2.38`; `/etc/passwd` is the Buildroot skeleton verbatim; there is no package manager or package database anywhere. BusyBox 1.36.1 + gcc 12.3.0 + Python 3.11 point at the Buildroot 2023.11 / 2024.02 series, but systemd is 257.7 — so it's a customized tree with bumped packages, not a stock release.
-- **Kernel:** `5.10.85-v3.0-flyos`, Allwinner H3 BSP-style, 2,696 modules, one out-of-tree module (`flyos-info.ko`). No source, no `/lib/modules/*/build`.
-- **Root is read-only SquashFS with A/B slots.** p3 and p5 are 1 GB SquashFS-zstd (identical in a fresh image); p6 is ext4 userdata that `flyos-init` grows to fill the card on first boot, then overlayfs-mounts under `/etc`, `/data`, `/root`, and `/usr/share/printer_data` (or `/opt/dsf` for RRF). Kernel arg `noro=1` bypasses the whole thing.
-- **`/config/config.txt` is the entire provisioning surface.** U-Boot turns its keys into kernel command-line args; systemd units gate on `ConditionKernelCommandLine=` (`printer=klipper`, `klipper_screen=1`, `screen!=none`, …). One image serves Klipper and RRF and every screen variant.
-- **OTA:** `/usr/bin/flyos-fast-ota`, Go 1.25.3 static ARM binary, embeds a Vue/Element-Plus UI, unpacks signed 7z payloads verified against `/data/public.pem`. Stripped, no source — not reproducible.
-
-### Installed software, versions
-
-| Component | Version |
-|---|---|
-| glibc | 2.38 (Buildroot) |
-| BusyBox | 1.36.1 |
-| systemd | 257.7 |
-| Python | 3.11 |
-| nginx | 1.26.3 |
-| Caddy | v2 |
-| OpenSSH (sshd) | 10.0 |
-| NetworkManager | 1.52.1 |
-| ttyd | 1.3.0 |
-| Klipper | upstream master ≈ `02cfc65e` (2026-05-07) + patches |
-| Moonraker | ≈ `9008485` (2026-05-07) + patches |
-| KlipperScreen | ≈ `3fab8d60` (2026-05-13) + patches |
-| Fluidd | v1.36.4 |
-| Mainsail | v2.17.0 |
-| Crowsnest | 4.2.0 |
-| Katapult | matches upstream, unmodified |
-| klippain-shaketune | vendored into `klippy/extras/shaketune` |
-| DSF / Duet | `/opt/dsf` — duetcontrolserver, duetwebserver, duetpluginservice; board configs for fly-c5, c5-v1.1, c8, c8p |
-| Also | ffmpeg, mpv, ustreamer, mjpg_streamer, v4l-utils, hostapd, wpa_supplicant, udhcpd, ntpd, polkit, Xorg + GTK3, git, gcc-arm-none-eabi in `/opt` |
-
-Python site-packages of note: numpy, scipy, matplotlib, Pillow, tornado (6.2 *and* 6.5.2), msgspec, msgpack, uvicorn, uvloop, zeroconf, python-can, pyserial(-asyncio), GitPython, PyGObject, sdbus-networkmanager, dbus-fast, dbus-next, streaming-form-data, preprocess-cancellation, zstandard, lmdb, libnacl, jinja2, distro, psutil, pyudev. Full list in `analysis/python-site-packages.txt`.
-
-Note: `flyos-init-venv` creates `/data/{klippy,moonraker,klipperscreen}-env` and just copies system site-packages into them. The venvs are cosmetic — the shipped units run `/usr/bin/python` directly.
-
-### Their changes, indexed
-
-**Klipper** — added `power_loss_resume.py`, `filament_blockage_detection.py` + `src/filament_blockage_detection.c`, vendored `led_effect.py` and shaketune, prebuilt `chelper/c_helper.so`. Modified: `virtual_sdcard.py` (heavily rewritten for PLR), `probe_eddy_current.py`, plus the host↔MCU path (`mcu.py`, `serialhdl.py`, `clocksync.py`, `msgproto.py`, `chelper/__init__.py`, `reactor.py`, `webhooks.py`) and MCU firmware (`src/sched.c`, `src/adccmds.c`, `src/basecmd.c`, `src/generic/armcm_timer.c`, `src/generic/timer_irq.c`, `src/Makefile`). Because host and firmware are patched together, mixing stock Klipper with Fly-built MCU firmware is not a guaranteed clean swap.
-
-**Moonraker** — new components `fly_lcd.py` and `network.py` (enabled by `[fly_lcd]` / `[network]` in `moonraker.conf`). `klippy_connection.py` gains a TCP fallback (`klippy_tcp_address`, default `127.0.0.1:7126`). `machine.py` resolves the SD device via `findmnt`/`lsblk` instead of hardcoding `mmcblk0`, and extends the SD manufacturer table. `file_manager.py` adds `GET /server/files/bottompic` plus ~390 lines of PIL G-code first-layer preview rendering. `application.py` adds upload logging and an `OSError` handler.
-
-**KlipperScreen** — new `ks_includes/ota_client.py`, `ks_includes/widgets/ota_overlay.py`, `panels/fly_lcd.py`, `panels/network_info.py`, plus `fly-lcd.svg` / `notification_important.svg` in all five themes. Modified `screen.py`, most panels, the default menu configs and every theme's `style.css`.
-
-**Worth stealing for your own build:** `power_loss_resume` + the `virtual_sdcard` changes, `filament_blockage_detection`, and the Moonraker `machine.py` SD-device fix. **Safe to drop:** `fly_lcd` (both sides), the OTA client, the KlipperScreen theming — all Fly-hardware-specific.
-
-## Security notes (before deriving anything from this image)
-
-- Root has a fixed SHA-256 crypt password baked into `/etc/shadow` — the same credential on every shipped unit.
-- `ttyd` is enabled on :8888, `--writable`, running `/usr/bin/login`, with no auth configured.
-- Moonraker binds `0.0.0.0:7125` with `trusted_clients: 0.0.0.0/0, ::/0` and `cors_domains: *` — authentication is effectively off.
-- Open ports as shipped: 22 (ssh), 80 / 9080 (Fluidd) / 9081 (Mainsail) nginx, 7125 moonraker, 8080-8083 crowsnest, 8888 ttyd.
-
-Any derivative needs a fresh root password, ttyd disabled or authenticated, and a real `trusted_clients` list before it goes on a network you don't control.
-
-## Where to pick the work up
-
-Decided so far: the teardown is done, the base distro question is answered (Buildroot, custom tree, unpublished), and the vendor changes are extracted as patches.
-
-Not decided — the actual fork in the road:
-
-1. **Follow their design.** Buildroot external tree for sun8i-h3 + the A/B SquashFS + overlayfs scheme. `flyos-glue/scripts/flyos-init` is the complete recipe for the overlay/resize behavior. Cost: you own a kernel and a toolchain forever, and there's no published `5.10.85-v3.0-flyos` source to start from.
-2. **Drop the appliance model.** Armbian on sunxi H3 (upstream Armbian has Mellow Fly C5 support merged — see [armbian/build#9584](https://github.com/armbian/build/pull/9584)) + KIAUH, then cherry-pick from the patches. Gets a writable rootfs, working `apt`, and a functioning Moonraker update manager. Loses OTA, A/B rollback, read-only root, psplash, and `config.txt` provisioning.
-
-Recommendation from the teardown: path 2, unless read-only root and A/B rollback are hard requirements.
-
-Open threads if the work continues:
-
-- Kernel provenance is unconfirmed. `5.10.85-v3.0-flyos` looks like an Allwinner/OrangePi 5.10 BSP tree, but the banner isn't recoverable from the compressed `zImage` and no config was shipped. GPL means Mellow owes source on request — worth asking them directly.
-- The patch sets still contain some upstream drift. If a patch is going to be applied rather than read, pin the upstream commit more precisely first (bisect on file-hash equality rather than the date-window heuristic used here).
-- `flyos-fast-ota` and `fly-flash` are the only vendor pieces with no readable source; `fly-flash.py` is present and readable, the Go OTA binary is not.
-- `parts/3.img` (rootfs slot B) is byte-identical to slot A in this image and was not analyzed separately.
+Scope: the build system (`build/`), the shipped scripts and units (`overlay/`), and the documentation in this repository. Everything listed under Credits stays under its own license and is fetched at build time, not vendored here — Klipper, Moonraker and Mainsail are GPL-3.0, which AGPL-3.0 combines with cleanly. The material in `analysis/` is reverse-engineering notes on a third-party image, not redistributable code. The benchmark print in `bench/fixtures/` is a third-party model under CC BY-NC-SA, not AGPL; see [`bench/fixtures/LICENSE.md`](bench/fixtures/LICENSE.md).
