@@ -24,10 +24,11 @@ done
 ~/moonraker-env/bin/pip install -q -r ~/moonraker/scripts/moonraker-requirements.txt
 
 echo "== Klipper host MCU (docs/RPi_microcontroller.md)"
-printf 'CONFIG_MACH_LINUX=y\n' > /tmp/linux-mcu.config
-make -C ~/klipper -s KCONFIG_CONFIG=/tmp/linux-mcu.config OUT=/tmp/linux-mcu/ olddefconfig >/dev/null
-make -C ~/klipper -s -j"$(nproc)" KCONFIG_CONFIG=/tmp/linux-mcu.config OUT=/tmp/linux-mcu/
-sudo install -m 0755 /tmp/linux-mcu/klipper.elf /usr/local/bin/klipper_mcu
+T=$(mktemp -d); trap 'rm -rf "$T"' EXIT   # private build dir: its klipper.elf is installed with sudo
+printf 'CONFIG_MACH_LINUX=y\n' > "$T/linux-mcu.config"
+make -C ~/klipper -s KCONFIG_CONFIG="$T/linux-mcu.config" OUT="$T/linux-mcu/" olddefconfig >/dev/null
+make -C ~/klipper -s -j"$(nproc)" KCONFIG_CONFIG="$T/linux-mcu.config" OUT="$T/linux-mcu/"
+sudo install -m 0755 "$T/linux-mcu/klipper.elf" /usr/local/bin/klipper_mcu
 sudo install -m 0644 ~/klipper/scripts/klipper-mcu.service /etc/systemd/system/klipper-mcu.service
 sudo usermod -aG tty "$USER"
 sudo systemctl daemon-reload && sudo systemctl enable --now klipper-mcu

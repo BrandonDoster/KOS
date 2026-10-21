@@ -1,0 +1,83 @@
+name: weekly
+
+# Bump build/pins.env to the latest upstream, commit it to main if tests pass, then build both boards and publish a
+# weekly-YYYYMMDD prerelease. Builds even when no pin moved: Debian's own updates still land in the image.
+on:
+  schedule:
+    - cron: '17 4 * * 1'   # Mondays 04:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: weekly
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      base: ${{ steps.bump.outputs.base }}
+      changed: ${{ steps.bump.outputs.changed }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - id: bump
+        run: |
+          build/bump-pins.sh
+          sh tests/run.sh
+          {
+              echo "base=$(git rev-parse HEAD)"
+              echo "tag=weekly-$(date -u +%Y%m%d)"
+              if git diff --quiet build/pins.env; then echo changed=false; else echo changed=true; fi
+          } >> "$GITHUB_OUTPUT"
+      - if: steps.bump.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: pins
+          path: build/pins.env
+
+  # Write access to main, nothing else; runs no repo code. The push fails (and nothing is published) if main moved
+  # since the bump job tested it.
+  commit:
+    needs: bump
+    if: needs.bump.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.bump.outputs.base }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: pins
+          path: build
+      - id: commit
+        env:
+          TAG: ${{ needs.bump.outputs.tag }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "build(pins): bump to latest upstream for $TAG" build/pins.env
+          git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: [bump, commit]
+    if: ${{ !cancelled() && needs.bump.result == 'success' && needs.commit.result != 'failure' }}
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.commit.outputs.sha || needs.bump.outputs.base }}
+      tag: ${{ needs.bump.outputs.tag }}
+      prerelease: true

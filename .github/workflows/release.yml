@@ -1,0 +1,66 @@
+name: release
+
+# A v* tag on a commit that has a weekly prerelease republishes that prerelease's files unchanged, so the bytes that
+# were tested are the bytes released. With no weekly for the commit, it builds one.
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  find:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      sha: ${{ steps.find.outputs.sha }}
+      weekly: ${{ steps.find.outputs.weekly }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          sha=$(gh api "repos/$GH_REPO/commits/$TAG" --jq .sha)   # peels annotated tags
+          weekly=$(gh api "repos/$GH_REPO/git/matching-refs/tags/weekly-" \
+              --jq ".[] | select(.object.sha == \"$sha\") | .ref | ltrimstr(\"refs/tags/\")" | sort | tail -n1)
+          [ -z "$weekly" ] || gh release view "$weekly" --json isPrerelease --jq .isPrerelease | grep -qx true || weekly=
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "weekly=$weekly" >> "$GITHUB_OUTPUT"
+          echo "commit $sha, weekly prerelease: ${weekly:-none}"
+
+  promote:
+    needs: find
+    if: needs.find.outputs.weekly != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          WEEKLY: ${{ needs.find.outputs.weekly }}
+        run: |
+          mkdir out && cd out
+          gh release download "$WEEKLY"
+          sha256sum -c kos-*.sha256
+          for f in kos-*.img.xz; do gh attestation verify "$f" -R "$GH_REPO"; done
+          gh release create "$TAG" ./* --verify-tag --title "$TAG" \
+              --notes "Same files as $WEEKLY, which was tested on hardware; not rebuilt."
+
+  build:
+    needs: find
+    if: needs.find.outputs.weekly == ''
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.find.outputs.sha }}
+      tag: ${{ github.ref_name }}
+      prerelease: false

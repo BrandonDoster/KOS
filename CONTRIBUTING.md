@@ -13,6 +13,64 @@ build/build.sh cb1      # or: build/build.sh cm5
 # output: out/kos-<board>-<date>.img
 ```
 
+The build runs upstream code as root (Klipper's `make`, pip, Debian and vendor maintainer scripts) in a privileged
+container; mmdebstrap needs `--privileged` for its chroot mounts. On a Linux host that is root on the host, so build
+on a machine you trust. The repository is mounted read-only and only `out/` is writable.
+
+## Pinned versions
+
+`build/pins.env` fixes what a fresh image starts with: the Klipper, Moonraker and `mainsail-config` commits, the
+Mainsail release and the sha256 of its `mainsail.zip`, the `msgspec` and `uvloop` versions, and the `debian:trixie`
+build container by digest. The values on `main` are the ones the last tested build used.
+
+On a running printer, Moonraker's update manager keeps updating Klipper, Moonraker and Mainsail past these pins (the
+checkouts stay on their branches). The pins only decide what a newly flashed card contains.
+
+`build/bump-pins.sh` points every pin at the latest upstream (master heads, the latest Mainsail release, PyPI, the
+current `debian:trixie` digest) and prints what moved. It leaves the file alone when nothing did. Run it by hand to
+try newer upstreams locally; the weekly workflow runs it on its own.
+
+## Weekly builds and releases
+
+- **Weekly (`.github/workflows/weekly.yml`, Mondays and on demand):** runs `build/bump-pins.sh` and `tests/run.sh`
+  on `main`. If a pin moved and the tests pass, a bot commit `build(pins): ...` goes straight to `main`. Then both
+  boards are built and published as a **prerelease** tagged `weekly-YYYYMMDD`, with the `.img.xz` files, the
+  `.sha256` files and the provenance attestation. A weekly is built even when no pin moved, because Debian's own
+  updates still change the image. Weeklies are built and tested in CI only; nobody has booted them.
+- **Release:** boot a weekly on real hardware, then push a `v*` tag on the same commit:
+
+  ```sh
+  git fetch --tags && git tag v1.0.0 weekly-20261026 && git push origin v1.0.0
+  ```
+
+  `.github/workflows/release.yml` finds the weekly prerelease for that commit, checks its `.sha256` files and
+  attestations, and publishes the same files as the release without rebuilding, so the bytes you tested are the
+  bytes users get. A `v*` tag on a commit with no weekly builds fresh images instead.
+- **By hand:** running `build images` from the Actions tab builds both boards and keeps them as workflow artifacts,
+  with no release.
+
+The image build job gets a read-only token that is not kept in `.git/config`; only the publish job, which runs no
+repository code, can write. Every action is pinned to a full commit SHA with its version in a comment; bump them
+together. Users can check that an image came from this repository's workflow with
+`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS`.
+
+A second weekly run on the same day fails at publishing, because the `weekly-YYYYMMDD` tag already exists. Delete
+that prerelease and its tag first if you really want to rebuild it.
+
+### Repository settings these workflows need
+
+- **Actions, General:** workflow permissions "Read repository contents" (the default for new repositories). Each
+  job asks for what it needs.
+- **`main`:** the weekly bot pushes to `main` with `GITHUB_TOKEN`. Classic branch protection that requires pull
+  requests or status checks blocks that push. Use a ruleset instead and add the GitHub Actions app as a bypass actor,
+  or leave `main` unprotected. Pushes made with `GITHUB_TOKEN` do not trigger other workflows, so `tests` does not run
+  again on the bot commit; the weekly job has already run `tests/run.sh` on it.
+- **Tags:** a tag ruleset on `v*` so that only maintainers can create release tags, and on `weekly-*` so that only
+  the GitHub Actions app can.
+- **Security:** turn on private vulnerability reporting (see [SECURITY.md](SECURITY.md)).
+- In a public repository, GitHub turns scheduled workflows off after 60 days with no activity. Re-enable `weekly` in the
+  Actions tab if that happens.
+
 ## Checks
 
 Run these before you open a pull request:

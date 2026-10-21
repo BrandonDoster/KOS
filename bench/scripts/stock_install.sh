@@ -48,8 +48,9 @@ sudo systemctl daemon-reload && sudo systemctl enable klipper
 
 # Mainsail (docs.mainsail.xyz manual setup; KIAUH writes the same files)
 sudo apt-get -o DPkg::Lock::Timeout=600 install -y nginx
-mkdir -p mainsail && curl -fsSL https://github.com/mainsail-crew/mainsail/releases/latest/download/mainsail.zip -o /tmp/mainsail.zip
-unzip -oq /tmp/mainsail.zip -d mainsail
+T=$(mktemp -d)
+mkdir -p mainsail && curl -fsSL https://github.com/mainsail-crew/mainsail/releases/latest/download/mainsail.zip -o "$T/mainsail.zip"
+unzip -oq "$T/mainsail.zip" -d mainsail && rm -rf "$T"
 [ -d mainsail-config ] || git clone https://github.com/mainsail-crew/mainsail-config.git
 ln -sfn "$HOME/mainsail-config/mainsail.cfg" "$HOME/printer_data/config/mainsail.cfg"
 chmod og+x "$HOME"   # what KIAUH does so nginx can reach ~/mainsail

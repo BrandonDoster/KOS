@@ -9,7 +9,7 @@ set -u
 LABEL=${1:?label}; RUNS=${2:?runs}
 H=$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6); OUT=$H/stall-$LABEL; mkdir -p "$OUT"
 T=/sys/kernel/tracing; DIRTY=$H/printer_data/stall-dirty.bin
-restore() { echo '!stacktrace' > $T/events/sched/sched_switch/trigger 2>/dev/null; echo 0 > $T/tracing_on; echo 0 > $T/events/enable; echo f > $T/tracing_cpumask; echo 1408 > $T/buffer_size_kb; }
+restore() { rm -f "$DIRTY"; echo '!stacktrace' > $T/events/sched/sched_switch/trigger 2>/dev/null; echo 0 > $T/tracing_on; echo 0 > $T/events/enable; echo f > $T/tracing_cpumask; echo 1408 > $T/buffer_size_kb; }
 trap restore EXIT
 
 echo 0 > $T/tracing_on; echo nop > $T/current_tracer; echo 0 > $T/events/enable

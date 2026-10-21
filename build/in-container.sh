@@ -1,6 +1,6 @@
 #!/bin/bash
 # Runs inside an arm64 debian:trixie container (privileged, for mmdebstrap's chroot mounts). $1 = board.
-# Produces out/kos-<board>-<date>.img
+# Produces out/kos-<board>-<date>.img. Writes only out/ and /tmp/work: build.sh mounts the repo read-only.
 set -euxo pipefail
 BOARD=${1:?board}
 cd "$(dirname "$0")/.."
@@ -13,7 +13,9 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 
 pkgs=$(grep -v '^#' build/packages.txt | tr '\n' ' ' | tr -s ' ' | sed 's/ /,/g;s/,$//;s/^,//')
 
-# rootfs. Hooks: overlay in, board files in, customize, board files out.
+# rootfs. Hooks: overlay in, board files and pins in, customize, build files out. The sources become the image's
+# /etc/apt/sources.list, so devices get Debian security updates. mmdebstrap copies the host's resolv.conf in for
+# network access and leaves it; the last hook drops it (NetworkManager writes the device's own).
 mmdebstrap --arch=arm64 --variant=minbase --mode=root \
     --include="$pkgs" \
     --aptopt='Acquire::Languages "none"' \
@@ -22,11 +24,14 @@ mmdebstrap --arch=arm64 --variant=minbase --mode=root \
     --customize-hook='sync-in overlay /' \
     --customize-hook='mkdir -p "$1/tmp/board"' \
     --customize-hook="sync-in build/boards/$BOARD /tmp/board" \
-    --customize-hook='copy-in build/customize.sh /tmp' \
+    --customize-hook='copy-in build/customize.sh build/pins.env /tmp' \
     --customize-hook="chroot \"\$1\" bash /tmp/customize.sh $BOARD" \
     --customize-hook='download /tmp/uboot-path /tmp/work/uboot-path' \
-    --customize-hook='rm -rf "$1/tmp/board" "$1/tmp/customize.sh"' \
-    trixie $WORK/rootfs http://deb.debian.org/debian
+    --customize-hook='rm -rf "$1/tmp/board" "$1/tmp/customize.sh" "$1/tmp/pins.env" "$1/etc/resolv.conf"' \
+    trixie $WORK/rootfs \
+    'deb https://deb.debian.org/debian trixie main' \
+    'deb https://deb.debian.org/debian trixie-updates main' \
+    'deb https://security.debian.org/debian-security trixie-security main'
 
 uboot=$(cat $WORK/uboot-path)
 [ -n "$uboot" ] && uboot_args="--uboot $WORK/rootfs$uboot --uboot-seek-kib $BOARD_UBOOT_SEEK_KIB" || uboot_args=""

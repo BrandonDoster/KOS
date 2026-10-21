@@ -1,40 +1,89 @@
 name: build images
 
+# Run by hand for artifacts only, or called by weekly.yml / release.yml with a tag to publish.
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
+  workflow_call:
+    inputs:
+      ref:
+        description: commit to build (full SHA)
+        type: string
+        required: true
+      tag:
+        description: release tag to publish under
+        type: string
+        required: true
+      prerelease:
+        type: boolean
+        required: true
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
+  # Runs upstream code as root (Klipper's make, pip, maintainer scripts), so it gets a read-only token and does not
+  # keep it in .git/config.
   build:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         board: [cb1, cm5]
-    container:
-      image: debian:trixie
-      options: --privileged
+    env:
+      BOARD: ${{ matrix.board }}
     steps:
-      - run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates xz-utils
-      - uses: actions/checkout@v4
-      - run: bash build/in-container.sh ${{ matrix.board }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - run: build/build.sh "$BOARD"
       - name: compress
         run: |
-          rm -rf /tmp/work   # 14 GB runner disk; rootfs is dead weight past this point
+          sudo chown -R "$(id -u):$(id -g)" out   # the container wrote as root
           cd out
-          xz -T0 -6 kos-${{ matrix.board }}-*.img
-          sha256sum kos-${{ matrix.board }}-*.img.xz > kos-${{ matrix.board }}.sha256
-      - uses: actions/upload-artifact@v4
+          xz -T0 -6 "kos-$BOARD"-*.img
+          sha256sum "kos-$BOARD"-*.img.xz > "kos-$BOARD.sha256"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: kos-${{ matrix.board }}
-          path: out/kos-${{ matrix.board }}-*.img.xz
-      - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
+          path: |
             out/kos-${{ matrix.board }}-*.img.xz
             out/kos-${{ matrix.board }}.sha256
+          if-no-files-found: error
+          compression-level: 0
+
+  # Only job with write access; runs no repo code.
+  publish:
+    if: inputs.tag != ''
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          path: out
+          merge-multiple: true
+      - id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
+        with:
+          subject-path: out/kos-*.img.xz
+      - name: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+          REF: ${{ inputs.ref }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE" out/kos-attestation.sigstore.json
+          if [ "$PRERELEASE" = true ]; then
+              set -- --prerelease --notes "Weekly build of $REF. Built and attested in CI, not booted on hardware."
+          else
+              set -- --notes "Built from $REF."
+          fi
+          gh release create "$TAG" out/* --target "$REF" --title "$TAG" "$@"
