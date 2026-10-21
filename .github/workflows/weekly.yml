@@ -22,6 +22,7 @@ permissions: {}
 
 concurrency:
   group: weekly
+  cancel-in-progress: false   # a running bump or build is never cut off by the next trigger
 
 jobs:
   bump:
