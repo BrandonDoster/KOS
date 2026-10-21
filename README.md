@@ -221,8 +221,8 @@ Every week GitHub Actions builds both boards from the newest Klipper, Moonraker 
 a prerelease tagged `weekly-YYYYMMDD`. Weeklies are built and checked in CI but not booted on hardware; use them to
 try what is coming. A release (`v*`) is a weekly that was booted on real hardware and then republished unchanged.
 Each image has a `.sha256` file and a build provenance attestation; check that an image came from this repository's
-workflow with `gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS --signer-workflow
-<owner>/klipperOS/.github/workflows/build.yml`. A fresh image starts with the
+workflow with `gh attestation verify kos-cb1-<date>.img.xz -R <owner>/KOS --signer-workflow
+<owner>/KOS/.github/workflows/build.yml`. A fresh image starts with the
 versions in `build/pins.env`; after that Moonraker's update manager updates Klipper, Moonraker and Mainsail as
 usual. Images get Debian security updates (`trixie-security` and `trixie-updates` are configured) through `apt`
 and Mainsail's system update, and install the security ones automatically while the printer is idle

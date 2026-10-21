@@ -55,7 +55,7 @@ try newer upstreams locally; the weekly workflow runs it on its own.
 The image build job gets a read-only token that is not kept in `.git/config`; only the publish job, which runs no
 repository code, can write. Every action is pinned to a full commit SHA with its version in a comment; bump them
 together. Users can check that an image came from this repository's workflow with
-`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS --signer-workflow <owner>/klipperOS/.github/workflows/build.yml`.
+`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/KOS --signer-workflow <owner>/KOS/.github/workflows/build.yml`.
 
 A second weekly run on the same day fails at publishing, because the `weekly-YYYYMMDD` tag already exists. Delete
 that prerelease and its tag first if you really want to rebuild it.
