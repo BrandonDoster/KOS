@@ -1,0 +1,22 @@
+# Only GitHub Actions. Everything else the image pulls in (Klipper, Moonraker, Mainsail, msgspec, uvloop, the
+# debian:trixie digest) is pinned in build/pins.env and bumped by build/bump-pins.sh in the weekly workflow; there is
+# no requirements.txt, Dockerfile or package manifest for Dependabot to manage.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday       # the day after the Monday weekly, so the two never race for main
+    cooldown:
+      default-days: 7    # let a new action release age a week before it is proposed
+    commit-message:
+      prefix: ci
+      include: scope     # ci(deps): ...
+    groups:
+      # Patch and minor bumps: one PR a week, auto-merged by automerge.yml once the required checks pass.
+      actions:
+        update-types: [minor, patch]
+      # Major bumps: one separate PR a week, left for a human (see CONTRIBUTING.md).
+      actions-major:
+        update-types: [major]

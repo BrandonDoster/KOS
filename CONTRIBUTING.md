@@ -67,7 +67,8 @@ that prerelease and its tag first if you really want to rebuild it.
 - **`main`:** the weekly bot pushes to `main` with `GITHUB_TOKEN`. Classic branch protection that requires pull
   requests or status checks blocks that push. Use a ruleset instead and add the GitHub Actions app as a bypass actor,
   or leave `main` unprotected. Pushes made with `GITHUB_TOKEN` do not trigger other workflows, so `tests` does not run
-  again on the bot commit; the weekly job has already run `tests/run.sh` on it.
+  again on the bot commit; the weekly job has already run `tests/run.sh` on it. Required checks for Dependabot clash
+  with this push; see [Dependabot](#dependabot) below.
 - **Tags:** a tag ruleset on `v*` so that only maintainers can create release tags, and on `weekly-*` so that only
   the GitHub Actions app can.
 - **Releases:** turn on **immutable releases** (Settings, General, Releases). A published weekly's files and its
@@ -76,6 +77,55 @@ that prerelease and its tag first if you really want to rebuild it.
 - **Security:** turn on private vulnerability reporting (see [SECURITY.md](SECURITY.md)).
 - In a public repository, GitHub turns scheduled workflows off after 60 days with no activity. Re-enable `weekly` in the
   Actions tab if that happens.
+
+### Dependabot
+
+`.github/dependabot.yml` checks the GitHub Actions in `.github/workflows/` every Tuesday (the day after the weekly)
+and only proposes action releases that are at least 7 days old. It opens at most two pull requests a week, with
+`ci(deps):` commit messages:
+
+- **Patch and minor bumps**, grouped into one pull request. `.github/workflows/automerge.yml` turns on auto-merge
+  (squash) for it, and GitHub merges it once the required checks pass. Nobody has to touch it.
+- **Major bumps**, grouped into a second pull request that is not auto-merged. Pull request CI runs the tests only,
+  not `build.yml`, `weekly.yml` or `release.yml`, so passing checks do not show that a new major of
+  `upload-artifact` or `attest-build-provenance` still works. Read the release notes, merge it, then run
+  `weekly` by hand (stage `bump`) to try it.
+
+Dependabot does not touch `build/pins.env`; the weekly workflow bumps those pins.
+
+Settings it needs:
+
+- **General, Pull Requests:** turn on **Allow auto-merge**. Without it `gh pr merge --auto` fails.
+- **`main` ruleset:** **Require status checks to pass**, listing every test job from `.github/workflows/test.yml`
+  (unit, lint, nginx, config or similar; TODO: exact check names to be filled in). Auto-merge only waits for
+  *required* checks; with none required it merges at once.
+- **Code security:** Dependabot version updates are configured by the file; Dependabot alerts and security updates
+  are optional extras.
+
+#### Pending decision: the weekly push and required checks (C2-5)
+
+> **Draft, pending the owner's choice. Nothing below is set up yet.**
+
+Required checks on `main` block the weekly bot's direct push of `build(pins): ...`, unless the pusher is a bypass
+actor of the ruleset. GitHub may not offer `GITHUB_TOKEN` (the GitHub Actions app) as a bypass actor on a repository
+ruleset, so the setup in the `main` bullet above may not be possible as written. Options:
+
+- **(a) Private GitHub App (recommended).** The owner creates a free GitHub App under their account, installed on
+  this repository only, with only *Contents: read and write*. Its ID and private key go in repository secrets. The
+  weekly `commit` job mints a one-hour token with `actions/create-github-app-token` (pinned by SHA) and pushes with
+  it. The App is the only bypass actor on the `main` ruleset, so it can push the pins and nothing else can skip the
+  checks. Its pushes do trigger workflows, so `tests` also runs on the bot commit. Cost: creating the App once and
+  about five lines in `weekly.yml`.
+- **(b) Weekly opens a pull request and auto-merges it.** No bypass actor needed. But pull requests opened with
+  `GITHUB_TOKEN` do not trigger workflows, so the required checks never run and the pull request waits forever.
+  It works only with an App or personal token, which brings back the setup cost of (a) plus more moving parts: the
+  build run has to wait for the merge, and the bump-then-build flow has to change.
+- **(c) No required checks; `automerge.yml` merges after `tests` passes.** Leave `main` without a ruleset, so the
+  weekly push keeps working. `automerge.yml` runs on `workflow_run` of `tests` for Dependabot pull requests and
+  merges only if the run succeeded. No App, but `main` has no protection at all, and a `workflow_run` job with write
+  access needs care.
+- A personal access token as bypass actor also works, but it is a long-lived secret with the owner's full rights.
+  Not recommended.
 
 ## Checks
 

@@ -1,0 +1,29 @@
+name: dependabot auto-merge
+
+# Turns on auto-merge for Dependabot's patch and minor GitHub Actions PRs. GitHub then merges the PR once the required
+# status checks on main pass. Major bumps are left for a human: PR CI runs tests only, not build.yml, weekly.yml or
+# release.yml, so a passing PR does not show that a major upload-artifact or attest-build-provenance bump still works.
+# Follows GitHub's "Automating Dependabot with GitHub Actions" docs: pull_request (not pull_request_target), no
+# checkout, write access only in this job. Dependabot-triggered runs get a read-only token unless the job asks.
+on: pull_request
+
+permissions: {}
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
+      - if: >-
+          steps.metadata.outputs.package-ecosystem == 'github_actions' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
