@@ -8,7 +8,8 @@ done
 python3 overlay/usr/lib/kos/kos-mcu-discover --test
 python3 overlay/usr/lib/kos/kos-archive --test
 python3 overlay/usr/lib/kos/kos-printer-idle --test
-. build/boards/cb1/board.sh && python3 build/boards/cb1/pgp-fpr.py build/boards/cb1/armbian.asc "$BOARD_APT_KEY_FPR"
+sh tests/test_pgp_fpr.sh
+sh tests/test_bump_pins.sh
 python3 bench/scripts/print_stats.py --test
 python3 build/mkimage.py --test
 bash tests/test_lib_sh.sh

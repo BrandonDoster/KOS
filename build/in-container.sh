@@ -13,21 +13,32 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 
 pkgs=$(grep -v '^#' build/packages.txt | tr '\n' ' ' | tr -s ' ' | sed 's/ /,/g;s/,$//;s/^,//')
 
-# rootfs. Hooks: overlay in, board files and pins in, customize, build files out. The sources become the image's
-# /etc/apt/sources.list, so devices get Debian security updates. mmdebstrap copies the host's resolv.conf in for
-# network access and leaves it; the last hook drops it (NetworkManager writes the device's own).
+# What goes into the image from the checkout, staged root-owned. sync-in and copy-in are tar pipes that keep owners,
+# and the checkout belongs to whoever cloned it (uid 1001 on GitHub runners): that uid would own /, /etc, the sudoers
+# file and sshd's key directory, so no SSH key and no sudo would work, and that uid would be root. Modes become what
+# git records (group and other get the owner's bits minus write), whatever the checkout's umask.
+# customize.sh sources pins.env: checked first.
+sh build/bump-pins.sh --check build/pins.env
+S=$WORK/stage; mkdir -p $S
+cp -a overlay build/boards/$BOARD build/customize.sh build/pins.env $S/
+chown -R 0:0 $S && chmod -R go=u-w $S
+
+# rootfs. Hooks: overlay in, board files and pins in, customize, build files and leftovers out (mmdebstrap also
+# empties /tmp at the end; this does not rely on it). The sources become the image's /etc/apt/sources.list, so
+# devices get Debian security updates. mmdebstrap copies the host's resolv.conf in for network access and leaves it;
+# the last hook drops it (NetworkManager writes the device's own).
 mmdebstrap --arch=arm64 --variant=minbase --mode=root \
     --include="$pkgs" \
     --aptopt='Acquire::Languages "none"' \
     --dpkgopt='path-exclude=/usr/share/man/*' --dpkgopt='path-exclude=/usr/share/doc/*' \
     --dpkgopt='path-exclude=/usr/share/locale/*' --dpkgopt='path-include=/usr/share/locale/locale.alias' \
-    --customize-hook='sync-in overlay /' \
+    --customize-hook="sync-in $S/overlay /" \
     --customize-hook='mkdir -p "$1/tmp/board"' \
-    --customize-hook="sync-in build/boards/$BOARD /tmp/board" \
-    --customize-hook='copy-in build/customize.sh build/pins.env /tmp' \
+    --customize-hook="sync-in $S/$BOARD /tmp/board" \
+    --customize-hook="copy-in $S/customize.sh $S/pins.env /tmp" \
     --customize-hook="chroot \"\$1\" bash /tmp/customize.sh $BOARD" \
     --customize-hook='download /tmp/uboot-path /tmp/work/uboot-path' \
-    --customize-hook='rm -rf "$1/tmp/board" "$1/tmp/customize.sh" "$1/tmp/pins.env" "$1/etc/resolv.conf"' \
+    --customize-hook='rm -rf "$1/tmp/board" "$1/tmp/customize.sh" "$1/tmp/pins.env" "$1/tmp/mainsail.zip" "$1/tmp/linux-mcu" "$1/tmp/linux-mcu.config" "$1/tmp/uboot-path" "$1/etc/resolv.conf"' \
     trixie $WORK/rootfs \
     'deb https://deb.debian.org/debian trixie main' \
     'deb https://deb.debian.org/debian trixie-updates main' \

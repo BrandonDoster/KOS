@@ -33,9 +33,12 @@ try newer upstreams locally; the weekly workflow runs it on its own.
 ## Weekly builds and releases
 
 - **Weekly (`.github/workflows/weekly.yml`, Mondays and on demand):** runs `build/bump-pins.sh` and `tests/run.sh`
-  on `main`. If a pin moved and the tests pass, a bot commit `build(pins): ...` goes straight to `main`. Then both
-  boards are built and published as a **prerelease** tagged `weekly-YYYYMMDD`, with the `.img.xz` files, the
-  `.sha256` files and the provenance attestation. A weekly is built even when no pin moved, because Debian's own
+  on `main`. If a pin moved and the tests pass, a bot commit `build(pins): ...` goes straight to `main`. Then the run
+  starts a second run of the same workflow on `main` (`stage: build`), so that the build and its attestation name the
+  commit with the new pins; that run refuses to build if `main` has moved on since. It builds both boards, checks
+  each image with `tests/inspect_image.sh` (owners, and the modes sshd and sudo insist on) before uploading it, and
+  publishes a **prerelease** tagged `weekly-YYYYMMDD`, with the `.img.xz` files, the `.sha256` files and the
+  provenance attestation. A weekly is built even when no pin moved, because Debian's own
   updates still change the image. Weeklies are built and tested in CI only; nobody has booted them.
 - **Release:** boot a weekly on real hardware, then push a `v*` tag on the same commit:
 
@@ -43,8 +46,8 @@ try newer upstreams locally; the weekly workflow runs it on its own.
   git fetch --tags && git tag v1.0.0 weekly-20261026 && git push origin v1.0.0
   ```
 
-  `.github/workflows/release.yml` finds the weekly prerelease for that commit, checks its `.sha256` files and
-  attestations, and publishes the same files as the release without rebuilding, so the bytes you tested are the
+  `.github/workflows/release.yml` finds the weekly prerelease for that commit, checks its `.sha256` files and that
+  each image's attestation comes from this repository's `build.yml`, run on `main` at exactly that commit, and publishes the same files as the release without rebuilding, so the bytes you tested are the
   bytes users get. A `v*` tag on a commit with no weekly builds fresh images instead.
 - **By hand:** running `build images` from the Actions tab builds both boards and keeps them as workflow artifacts,
   with no release.
@@ -52,7 +55,7 @@ try newer upstreams locally; the weekly workflow runs it on its own.
 The image build job gets a read-only token that is not kept in `.git/config`; only the publish job, which runs no
 repository code, can write. Every action is pinned to a full commit SHA with its version in a comment; bump them
 together. Users can check that an image came from this repository's workflow with
-`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS`.
+`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS --signer-workflow <owner>/klipperOS/.github/workflows/build.yml`.
 
 A second weekly run on the same day fails at publishing, because the `weekly-YYYYMMDD` tag already exists. Delete
 that prerelease and its tag first if you really want to rebuild it.
@@ -67,6 +70,9 @@ that prerelease and its tag first if you really want to rebuild it.
   again on the bot commit; the weekly job has already run `tests/run.sh` on it.
 - **Tags:** a tag ruleset on `v*` so that only maintainers can create release tags, and on `weekly-*` so that only
   the GitHub Actions app can.
+- **Releases:** turn on **immutable releases** (Settings, General, Releases). A published weekly's files and its
+  `weekly-*` tag can then no longer be swapped between hardware testing and the `v*` tag that republishes them.
+  `release.yml` relies on it: its attestation check binds the files to the commit, not to one particular weekly.
 - **Security:** turn on private vulnerability reporting (see [SECURITY.md](SECURITY.md)).
 - In a public repository, GitHub turns scheduled workflows off after 60 days with no activity. Re-enable `weekly` in the
   Actions tab if that happens.

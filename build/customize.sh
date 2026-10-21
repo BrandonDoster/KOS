@@ -5,7 +5,7 @@ set -euxo pipefail
 export DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
 BOARD=$1
 . /tmp/board/board.sh
-. /tmp/pins.env   # build/pins.env: upstream revisions and checksums
+. /tmp/pins.env   # build/pins.env: upstream revisions and checksums; in-container.sh checked its shape
 
 # --- user ---
 id klipper >/dev/null 2>&1 || useradd -m -u 1000 -U -s /bin/bash -G sudo,dialout,tty,video,plugdev klipper   # user first so gid 1000 = klipper

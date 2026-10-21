@@ -76,3 +76,20 @@ The first version (V1). Not released yet; build it from source.
 - The Raspberry Pi keyring `.deb` is downloaded over https and checked against a pinned sha256, and its key is not
   installed into `trusted.gpg.d` (where it would be trusted for Debian's sources too). The Armbian key is committed
   with a pinned fingerprint, and Armbian's repository may only supply kernel, device tree and U-Boot packages.
+- Everything the build copies from the checkout into the image is root-owned, whoever owns the checkout (CI images
+  had the runner's uid on `/`, `/etc`, the sudoers file and `/etc/kos`, so no SSH key and no `sudo` worked). CI checks
+  owners and the modes sshd and sudo require in every image before uploading it.
+- `kos-config` keeps Moonraker on `127.0.0.1` on every boot, also when an imported `moonraker.conf` said `0.0.0.0`.
+- Commenting out a continued `ssh_key=` line now revokes that key (a comment line ends a continuation). A UTF-8 BOM
+  no longer hides the first setting, and a continuation running into the next `key=` is warned about instead of
+  swallowing it. The shell and Python parsers agree on CR and NUL bytes.
+- SSH keys with options (`from=`, `command=`, ...) or certificates are refused, instead of being installed without
+  their restriction. A password `chpasswd` rejects locks the account instead of keeping the old password.
+- Any name `allowed_hosts=` accepts works in nginx (253-character names, `default`, `include`, `localhost`).
+- `timezone=localtime` is rejected (it made `/etc/localtime` a symlink loop).
+- CM5: the Raspberry Pi repository may only supply firmware, kernels and its keyring, so its `+rpt` builds of glibc,
+  NetworkManager and wpasupplicant cannot block Debian security updates.
+- The Armbian key check rejects a keyring with anything besides the one public key (secret key packets, a second
+  armor block). `pins.env` is checked line by line before anything sources it or the weekly job commits it.
+- Weekly builds run on the commit with the new pins, and a release only republishes files whose attestation comes
+  from this repository's `build.yml` on `main` at the release commit.

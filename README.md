@@ -156,9 +156,14 @@ UART, CB1 debug UART) asks for a password, so it needs `password=`.
 
 KOS installs Debian security updates by itself (`unattended-upgrades`, `trixie-security` only), once a day and only
 while the printer is idle. Before each run it asks Moonraker; if a print is running or paused, Klippy is starting,
-or Moonraker does not answer, it skips that day. It never reboots. Debian restarts an updated service such as
-nginx or sshd as usual; Klipper and Moonraker are not touched. Klipper, Moonraker and Mainsail themselves update
-through Mainsail's update manager, as on any Klipper install. See [SECURITY.md](SECURITY.md) for what KOS trusts.
+or Moonraker does not answer, it skips that day. The check runs only before an update starts: an update that is
+already running when a print starts carries on, at the lowest CPU and disk priority. It never reboots. Debian restarts
+an updated service such as nginx or sshd as usual; Klipper and Moonraker are not touched. Klipper, Moonraker and
+Mainsail themselves update through Mainsail's update manager, as on any Klipper install.
+
+The kernel and boot firmware are not updated automatically: they come from Armbian (CB1) or Raspberry Pi (CM5), not
+from Debian's security archive, and a new kernel needs a reboot. Install them with Mainsail's system update (or
+`sudo apt full-upgrade`), then reboot when the printer is idle. See [SECURITY.md](SECURITY.md) for what KOS trusts.
 
 ## Performance
 
@@ -216,7 +221,8 @@ Every week GitHub Actions builds both boards from the newest Klipper, Moonraker 
 a prerelease tagged `weekly-YYYYMMDD`. Weeklies are built and checked in CI but not booted on hardware; use them to
 try what is coming. A release (`v*`) is a weekly that was booted on real hardware and then republished unchanged.
 Each image has a `.sha256` file and a build provenance attestation; check that an image came from this repository's
-workflow with `gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS`. A fresh image starts with the
+workflow with `gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS --signer-workflow
+<owner>/klipperOS/.github/workflows/build.yml`. A fresh image starts with the
 versions in `build/pins.env`; after that Moonraker's update manager updates Klipper, Moonraker and Mainsail as
 usual. Images get Debian security updates (`trixie-security` and `trixie-updates` are configured) through `apt`
 and Mainsail's system update, and install the security ones automatically while the printer is idle

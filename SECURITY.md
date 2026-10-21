@@ -32,11 +32,16 @@ These are intended, so they are not vulnerabilities on their own:
   ownership of it.
 - The `kos.conf` partition is FAT and readable by anyone who holds the SD card, including the Wi-Fi password. On the
   running printer it is readable only by `klipper` and root.
-- Debian security updates install automatically while the printer is idle (never during a print, never a reboot).
+- Debian security updates install automatically while the printer is idle (never started during a print, never a
+  reboot). The kernel and boot firmware (Armbian on CB1, Raspberry Pi on CM5) are not; they need a system update
+  from Mainsail and a reboot.
+- `ssh_key=` takes plain public keys only. A key with options (`from=`, `command=`, `restrict`, ...) or a certificate
+  is refused with a warning, not installed without its restriction.
 
 What KOS does to keep the network side narrow:
 
-- Moonraker listens on `127.0.0.1` only. nginx on port 80 is the only way in, and it answers only to the hostname,
+- Moonraker listens on `127.0.0.1` only: `kos-config` sets `host: 127.0.0.1` in `moonraker.conf`'s `[server]` on
+  every boot, also after importing a config from another install, and warns when it had to. nginx on port 80 is the only way in, and it answers only to the hostname,
   `<hostname>.local`, the names in `allowed_hosts=` and IP addresses (against DNS rebinding). API and websocket
   requests that carry an `Origin` from another site are rejected (against cross-site requests from web pages).
 - IPv4 only: IPv6 is disabled on the kernel command line, so nothing listens on global IPv6 addresses.

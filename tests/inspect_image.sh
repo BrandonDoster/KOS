@@ -1,8 +1,12 @@
 #!/bin/sh
 # Read-only inspection of a built image without mounting it. Usage: tests/inspect_image.sh out/kos-<board>-*.img
+# Prints what is in the image, and fails if anything outside the klipper home (and a few package-owned paths) is not
+# owned by root, or if a path sshd or sudo checks is not root-owned or is writable by others. CI runs it before
+# publishing (.github/workflows/build.yml).
 set -eu
-IMG=${1:?image}
+IMG=$(cd "$(dirname "${1:?image}")" && pwd)/$(basename "$1")
 cd "$(dirname "$0")/.."
+sh build/bump-pins.sh --check build/pins.env && . build/pins.env   # DEBIAN_IMAGE
 python3 - "$IMG" <<'EOF'
 import sys, struct
 d = open(sys.argv[1], "rb")
@@ -13,7 +17,7 @@ for i in range(4):
     if typ: print(f"  p{i+1}: type=0x{typ:02x} boot={'*' if flag else '-'} start={start*512//2**20} MiB size={size*512//2**20} MiB")
 d.seek(8192); print("U-Boot eGON header at 8 KiB:", d.read(12)[4:12] == b"eGON.BT0")
 EOF
-docker run --rm -i --platform linux/amd64 -v "$PWD/$(dirname "$IMG"):/o:ro" -e IMG="/o/$(basename "$IMG")" debian:trixie bash -eu <<'EOF'
+docker run --rm -i -v "$(dirname "$IMG"):/o:ro" -e IMG="/o/$(basename "$IMG")" "$DEBIAN_IMAGE" bash -eu <<'EOF'
 apt-get update -qq >/dev/null; apt-get install -y -qq e2fsprogs mtools python3 >/dev/null 2>&1
 # partition table -> offsets
 eval "$(python3 - "$IMG" <<'PY'
@@ -44,4 +48,28 @@ echo "--- machine-id bytes"; r "cat /etc/machine-id" | wc -c
 echo "--- apt sources"; for f in $(r "ls /etc/apt/sources.list.d" | tr -s ' \n' '\n' | grep '\.list$'); do r "cat /etc/apt/sources.list.d/$f"; done
 echo "--- modules"; r "ls /lib/modules" | tr -s ' \n' '\n' | grep -E '^[0-9]' | tr '\n' ' '; echo
 echo "--- kernel config bits"; for c in $(r "ls /boot" | tr -s ' \n' '\n' | grep '^config-'); do echo "$c:"; r "cat /boot/$c" | grep -E '^CONFIG_(EXT4_FS|CAN_GS_USB|CAN_MCP251XFD|RTL8189FS|PREEMPT|NO_HZ_FULL|CMA_SIZE_MBYTES|DRM_SUN4I|DRM_VC4|ARM64_16K_PAGES)=' | tr '\n' ' '; echo; done
+# Owners and modes, from a copy of the root filesystem (debugfs rdump keeps owners and permission bits).
+mkdir /tmp/rootfs && debugfs -R "rdump / /tmp/rootfs" /tmp/root.fs >/dev/null 2>&1 && cd /tmp/rootfs
+bad=0
+fail() { echo "FAIL: $1"; printf '%s\n' "$2" | head -n 40 | sed 's/^/    /'; bad=1; }
+# Only klipper's home and what packages hand to their own system users may belong to someone other than root.
+f=$(find . -xdev \( -path ./home/klipper -o -path ./var/log -o -path ./var/lib/apt/lists/partial \
+    -o -path ./var/cache/apt/archives/partial -o -path ./var/lib/systemd/network \) -prune -o ! -uid 0 -printf '%U:%G %p\n')
+[ -z "$f" ] || fail "not owned by root" "$f"
+f=$(find ./home/klipper -xdev ! -uid 1000 ! -uid 0 -printf '%U:%G %p\n')
+[ -z "$f" ] || fail "in /home/klipper but owned by neither klipper nor root" "$f"
+f=$(find . -xdev \( -path ./home/klipper -prune \) -o -gid +999 -printf '%U:%G %p\n')
+[ -z "$f" ] || fail "group is a user's group (gid 1000 or more)" "$f"
+# sshd's StrictModes (AuthorizedKeysFile /etc/kos/authorized_keys/%u and every directory above it), sshd's and sudo's
+# own files, and what root runs: root:root and not writable by group or others. sudoers files exactly 0440.
+f=$(for p in . etc etc/kos etc/kos/authorized_keys etc/ssh etc/ssh/sshd_config etc/ssh/sshd_config.d \
+        etc/ssh/sshd_config.d/* etc/sudoers etc/sudoers.d etc/sudoers.d/* etc/systemd/system \
+        etc/systemd/system/*.service usr usr/lib usr/lib/kos usr/lib/kos/*; do
+    [ -e "$p" ] && [ ! -L "$p" ] && find "$p" -maxdepth 0 \( ! -uid 0 -o ! -gid 0 -o -perm /022 \) -printf '%U:%G %m %p\n'
+done)
+[ -z "$f" ] || fail "not root:root, or writable by group or others" "$f"
+f=$(find etc/sudoers etc/sudoers.d -type f ! -perm 0440 -printf '%m %p\n')
+[ -z "$f" ] || fail "sudoers file not mode 0440" "$f"
+[ "$bad" = 0 ] && echo "--- owners and modes: ok"
+exit "$bad"
 EOF

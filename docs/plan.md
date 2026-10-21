@@ -543,13 +543,13 @@ Same order on both, stop at the first failure and fix that layer:
 
 ### 21.5 Release pipeline
 
-`.github/workflows/build.yml` runs `build/in-container.sh` for `cb1` and `cm5` in parallel on `ubuntu-24.04-arm` (native arm64, so no qemu tax) inside a privileged `debian:trixie` container pinned by digest (`build/pins.env`), with a read-only token. `.github/workflows/weekly.yml` bumps `build/pins.env` to the newest Klipper, Moonraker, mainsail-config and Mainsail (`build/bump-pins.sh`), then calls it and publishes `kos-<board>-<date>.img.xz`, a `.sha256` and a GitHub build provenance attestation as the `weekly-YYYYMMDD` prerelease. `.github/workflows/release.yml` runs on a `v*` tag: it republishes the files of the weekly built from that commit, unchanged, so the bytes tested on hardware are the bytes released. Publishing happens in separate jobs that run no repository code.
+`.github/workflows/build.yml` runs `build/in-container.sh` for `cb1` and `cm5` in parallel on `ubuntu-24.04-arm` (native arm64, so no qemu tax) inside a privileged `debian:trixie` container pinned by digest (`build/pins.env`), with a read-only token. `.github/workflows/weekly.yml` bumps `build/pins.env` to the newest Klipper, Moonraker, mainsail-config and Mainsail (`build/bump-pins.sh`), commits that, then starts a second run on `main` (so the build and its attestation name the bumped commit) that calls it, checks each image with `tests/inspect_image.sh` (owners, sshd/sudo modes) before upload, and publishes `kos-<board>-<date>.img.xz`, a `.sha256` and a GitHub build provenance attestation as the `weekly-YYYYMMDD` prerelease. `.github/workflows/release.yml` runs on a `v*` tag: it republishes the files of the weekly built from that commit, unchanged, after checking that their attestation comes from `build.yml` on `main` at that commit, so the bytes tested on hardware are the bytes released. Publishing happens in separate jobs that run no repository code.
 
 `.xz` is the ship format because Raspberry Pi Imager and balenaEtcher both decompress it natively. A ~3.5 GB image lands around 400–600 MB, well under the 2 GB per-file release-asset limit. Raw `.img` files are never committed — git's hard limit is 100 MB.
 
 The runner has ~14 GB of disk, which is why the compress step clears `/tmp/work` first; the rootfs is dead weight once the image is assembled.
 
-Provenance: each image has an attestation (`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS`). Not done, deliberately: GPG-signed images, apt caching between runs, a `latest` tag.
+Provenance: each image has an attestation (`gh attestation verify kos-cb1-<date>.img.xz -R <owner>/klipperOS --signer-workflow <owner>/klipperOS/.github/workflows/build.yml`). Not done, deliberately: GPG-signed images, apt caching between runs, a `latest` tag.
 
 Untested: no git remote is configured yet, so the workflow has never executed.
 

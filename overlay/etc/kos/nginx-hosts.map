@@ -1,2 +1,3 @@
-kos 1;
-kos.local 1;
+\kos 1;
+\kos.local 1;
+\localhost 1;

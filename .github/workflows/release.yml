@@ -21,9 +21,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
         run: |
-          sha=$(gh api "repos/$GH_REPO/commits/$TAG" --jq .sha)   # peels annotated tags
+          sha=$GITHUB_SHA   # the commit the pushed tag points to (peeled), not a lookup by name
           weekly=$(gh api "repos/$GH_REPO/git/matching-refs/tags/weekly-" \
               --jq ".[] | select(.object.sha == \"$sha\") | .ref | ltrimstr(\"refs/tags/\")" | sort | tail -n1)
           [ -z "$weekly" ] || gh release view "$weekly" --json isPrerelease --jq .isPrerelease | grep -qx true || weekly=
@@ -44,11 +43,17 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
           WEEKLY: ${{ needs.find.outputs.weekly }}
+          SHA: ${{ needs.find.outputs.sha }}
         run: |
           mkdir out && cd out
           gh release download "$WEEKLY"
           sha256sum -c kos-*.sha256
-          for f in kos-*.img.xz; do gh attestation verify "$f" -R "$GH_REPO"; done
+          # Built by this repo's build.yml, in a run on main at exactly this commit, on a GitHub-hosted runner: not
+          # just any attested file from this repo (an older weekly, or one from another workflow or branch).
+          for f in kos-*.img.xz; do
+              gh attestation verify "$f" -R "$GH_REPO" --signer-workflow "$GH_REPO/.github/workflows/build.yml" \
+                  --source-ref refs/heads/main --source-digest "$SHA" --deny-self-hosted-runners
+          done
           gh release create "$TAG" ./* --verify-tag --title "$TAG" \
               --notes "Same files as $WEEKLY, which was tested on hardware; not rebuilt."
 

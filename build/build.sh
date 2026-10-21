@@ -4,6 +4,7 @@
 set -eu
 BOARD=${1:-cb1}
 cd "$(dirname "$0")/.."
+sh build/bump-pins.sh --check build/pins.env   # only known KEY=value lines of a strict shape get sourced
 . build/pins.env   # DEBIAN_IMAGE: the build container, pinned by digest
 mkdir -p out
 # --privileged: mmdebstrap --mode=root mounts /proc, /sys and /dev into the chroot. The build also runs upstream code

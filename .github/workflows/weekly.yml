@@ -1,11 +1,22 @@
 name: weekly
 
-# Bump build/pins.env to the latest upstream, commit it to main if tests pass, then build both boards and publish a
-# weekly-YYYYMMDD prerelease. Builds even when no pin moved: Debian's own updates still land in the image.
+# Bump build/pins.env to the latest upstream and commit it to main if tests pass. Then a second run of this workflow,
+# started on main, builds both boards and publishes a weekly-YYYYMMDD prerelease, so the build and its provenance name
+# the commit with the new pins. Builds even when no pin moved: Debian's own updates still land in the image.
 on:
   schedule:
     - cron: '17 4 * * 1'   # Mondays 04:17 UTC
   workflow_dispatch:
+    inputs:
+      stage:
+        description: 'bump: update the pins, then start a build run. build: build and publish main as it is'
+        type: choice
+        options: [bump, build]
+        default: bump
+      expect:
+        description: commit the build run must be on (set by the bump run)
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -14,6 +25,7 @@ concurrency:
 
 jobs:
   bump:
+    if: inputs.stage != 'build'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -59,6 +71,13 @@ jobs:
         with:
           name: pins
           path: build
+      # Runs no repo code, so the allowlist is here, not in bump-pins.sh: comments and known KEY=value lines only.
+      - name: check pins.env
+        run: |
+          if LC_ALL=C grep -nEvx '(#.*|(KLIPPER|MOONRAKER|MAINSAIL_CONFIG)_COMMIT=[0-9a-f]{40}|MAINSAIL_VERSION=v[0-9]+(\.[0-9]+)+|MAINSAIL_ZIP_SHA256=[0-9a-f]{64}|PIP_(MSGSPEC|UVLOOP)_VERSION=[0-9]+(\.[0-9]+)+|DEBIAN_IMAGE=debian:trixie@sha256:[0-9a-f]{64})?' build/pins.env; then
+              echo "::error::build/pins.env has unexpected lines (above); not committed"
+              exit 1
+          fi
       - id: commit
         env:
           TAG: ${{ needs.bump.outputs.tag }}
@@ -69,15 +88,43 @@ jobs:
           git push origin HEAD:main
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  build:
+  # Starts the build run on main: its commit (github.sha) is the one with the new pins, and the attestation names it.
+  dispatch:
     needs: [bump, commit]
     if: ${{ !cancelled() && needs.bump.result == 'success' && needs.commit.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXPECT: ${{ needs.commit.outputs.sha || needs.bump.outputs.base }}
+        run: gh workflow run weekly.yml --ref main -f stage=build -f expect="$EXPECT"
+
+  check:
+    if: inputs.stage == 'build'
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - id: check
+        env:
+          EXPECT: ${{ inputs.expect }}
+        run: |
+          [ "$GITHUB_REF" = refs/heads/main ] || { echo "::error::weekly builds come from main only"; exit 1; }
+          [ -z "$EXPECT" ] || [ "$EXPECT" = "$GITHUB_SHA" ] ||
+              { echo "::error::main moved to $GITHUB_SHA after the bump run committed $EXPECT; not built"; exit 1; }
+          echo "tag=weekly-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: check
     permissions:
       contents: write
       id-token: write
       attestations: write
     uses: ./.github/workflows/build.yml
     with:
-      ref: ${{ needs.commit.outputs.sha || needs.bump.outputs.base }}
-      tag: ${{ needs.bump.outputs.tag }}
+      ref: ${{ github.sha }}
+      tag: ${{ needs.check.outputs.tag }}
       prerelease: true

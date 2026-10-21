@@ -20,7 +20,7 @@ run "Raspberry Pi Compute Module 5 Lite Rev 1.0"                 # defaults: the
 grep -A1 -x '\[board-type=0x18\]' "$T/config.txt" | grep -qx 'device_tree=bcm2712-rpi-cm5-cm4io.dtb'
 grep -A1 -x '\[board-type=0x1a\]' "$T/config.txt" | grep -qx 'device_tree=bcm2712-rpi-cm5l-cm4io.dtb'
 grep -qx 'dtparam=uart0_console' "$T/config.txt"
-! grep -q debug_quirks2 "$T/cmdline.txt"
+! grep -q debug_quirks2 "$T/cmdline.txt" || exit 1
 
 run "Raspberry Pi Compute Module 5 Rev 1.0" carrier_dt=off       # both trees commented, back on restores them
 [ "$(grep -c '^#device_tree=bcm2712-rpi-cm5l*-cm4io.dtb$' "$T/config.txt")" -eq 2 ]
@@ -35,7 +35,7 @@ run "Raspberry Pi Compute Module 5 Rev 1.0" sd_3v3_only=on      # idempotent: ad
 run "Raspberry Pi Compute Module 5 Rev 1.0" carrier_dt=off serial_console=off sd_3v3_only=off
 [ "$(grep -c '^#device_tree=' "$T/config.txt")" -eq 2 ]
 grep -qx '#dtparam=uart0_console' "$T/config.txt"
-! grep -q debug_quirks2 "$T/cmdline.txt"
+! grep -q debug_quirks2 "$T/cmdline.txt" || exit 1
 
 fresh; before=$(cat "$T/config.txt" "$T/cmdline.txt")
 run "Raspberry Pi Compute Module 4 Rev 1.1" sd_3v3_only=on       # not a CM5: untouched

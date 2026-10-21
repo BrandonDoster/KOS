@@ -10,6 +10,18 @@ echo "$BOARD_KEYRING_DEB_SHA256  /tmp/keyring.deb" | sha256sum -c -
 echo 'path-exclude=/etc/apt/trusted.gpg.d/raspberrypi-archive*' > /etc/dpkg/dpkg.cfg.d/kos-raspi-key
 dpkg -i /tmp/keyring.deb && rm -f /tmp/keyring.deb
 test ! -e /etc/apt/trusted.gpg.d/raspberrypi-archive.asc && test -e /usr/share/keyrings/raspberrypi-archive-keyring.gpg
+# The Pi repo also rebuilds glibc, NetworkManager, wpasupplicant and more as +rpt versions, which sort above Debian's
+# and would then block Debian's security updates (52kos-unattended-upgrades): take only firmware, kernels and the
+# keyring from it (first match wins), like the Armbian pin on CB1.
+cat > /etc/apt/preferences.d/kos-raspi <<EOF
+Package: raspi-firmware linux-image-* linux-base-* linux-libc-dev firmware-brcm80211 bluez-firmware raspberrypi-archive-keyring
+Pin: origin archive.raspberrypi.com
+Pin-Priority: 500
+
+Package: *
+Pin: origin archive.raspberrypi.com
+Pin-Priority: -1
+EOF
 echo "$BOARD_APT_LINE" > /etc/apt/sources.list.d/raspi.list
 apt-get update
 # raspi-firmware first: its kernel/initramfs hooks must exist before the kernel packages run them.

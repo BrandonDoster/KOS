@@ -17,6 +17,6 @@ run ''                                    # df fails: the 30-day purge only
 run 50                                    # 50% free: same
 [ "$(wc -l < "$T/calls")" -eq 1 ]
 run 1                                     # 1% free: day by day down to 0, still only the real folder
-[ "$(wc -l < "$T/calls")" -eq 31 ] && [ "$(tail -n 1 "$T/calls")" = "-f --trash-dir $T/real 0" ]
-! grep -q -e link -e evil "$T/calls"
+[ "$(wc -l < "$T/calls")" -eq 31 ] && [ "$(tail -n 1 "$T/calls")" = "-f --trash-dir $T/real 0" ] || exit 1
+! grep -q -e link -e evil "$T/calls" || exit 1
 echo ok

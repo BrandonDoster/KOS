@@ -7,6 +7,11 @@ set -u
 mkdir -p "$KOS_STATE"
 PD=$KOS_HOME/printer_data
 
+# kos.conf continuations that look like mistakes (lib.sh cfg_lines)
+while IFS= read -r p; do [ -n "$p" ] && warn "kos.conf: $p"; done <<EOF
+$(cfg_problems)
+EOF
+
 # --- first boot only: grow the data partition (retried each boot until it mounts). SSH host keys: ssh.service.d ---
 if [ ! -e "$KOS_STATE/firstboot.done" ] && dev=$(findmnt -no SOURCE "$PD" 2>/dev/null); then
     disk=$(lsblk -no PKNAME "$dev"); num=$(cat "/sys/class/block/$(basename "$dev")/partition")
@@ -47,6 +52,13 @@ if mountpoint -q "$PD"; then
     # Mainsail's client macros, the way its installer provides them: a symlink into the mainsail-config checkout.
     [ -e "$PD/config/mainsail.cfg" ] || ln -sfn /home/klipper/mainsail-config/mainsail.cfg "$PD/config/mainsail.cfg"
     [ -f "$PD/config/moonraker.conf" ] || cp /usr/lib/kos/moonraker.conf "$PD/config/moonraker.conf"
+    # Moonraker on loopback only, behind nginx's Host/Origin checks (docs/plan.md §11). An imported moonraker.conf
+    # usually says 0.0.0.0 or nothing (= 0.0.0.0): set [server] host every boot, and touch nothing else in the file.
+    mc=$PD/config/moonraker.conf
+    if ! mhost=$(moonraker_host "$mc"); then
+        moonraker_host "$mc" 127.0.0.1 > "$mc.kos-new" && mv -f "$mc.kos-new" "$mc" &&
+            warn "moonraker.conf: [server] host was '${mhost:-not set, so 0.0.0.0}', set to 127.0.0.1 (Moonraker is reached through nginx on port 80)"
+    fi
     [ -f "$PD/config/printer.cfg" ] || cp /usr/lib/kos/printer.cfg "$PD/config/printer.cfg"
     chown -R klipper:klipper "$PD"
 else
@@ -73,14 +85,15 @@ fi
 names="$h $h.local"
 while IFS= read -r a; do
     [ -z "$a" ] && continue
-    if valid_dnsname "$a"; then names="$names $a"; else warn "allowed_hosts: '$a' is not a host name, ignored"; fi
+    if valid_dnsname "$a"; then names="$names $a"; else warn "allowed_hosts: '$(printf '%.80s' "$a")' is not a host name (at most 253 characters), ignored"; fi
 done <<EOF
 $(cfg allowed_hosts | tr ', ' '\n\n')
 EOF
-map=$(printf '%s\n' $names | tr 'A-Z' 'a-z' | sort -u | sed 's/$/ 1;/')
+map=$(hosts_map $names)
 if [ "$map" != "$(cat /etc/kos/nginx-hosts.map 2>/dev/null)" ]; then
     mkdir -p /etc/kos && printf '%s\n' "$map" > /etc/kos/nginx-hosts.map
-    systemctl try-reload-or-restart nginx.service >/dev/null 2>&1   # at boot nginx starts after us anyway
+    # at boot nginx starts after us anyway
+    systemctl try-reload-or-restart nginx.service >/dev/null 2>&1 || warn "nginx did not accept the new host names (journalctl -u nginx)"
 fi
 
 # --- timezone ---
@@ -93,7 +106,11 @@ fi
 # --- credentials: kos.conf is the only source, applied every boot, so removing a line revokes it ---
 if [ -f "$KOS_CONF" ]; then
     pw=$(cfg password)
-    if [ -n "$pw" ]; then echo "klipper:$pw" | chpasswd; else usermod -p '*' klipper; fi   # '*': no password matches
+    # '*': no password matches. A password that cannot be set locks the account rather than keep an old one.
+    if [ -n "$pw" ] && ! printf 'klipper:%s\n' "$pw" | chpasswd; then
+        warn "password= could not be set (chpasswd failed): password login is off until it is fixed"; pw=
+    fi
+    [ -n "$pw" ] || usermod -p '*' klipper || warn "could not lock klipper's password (usermod failed)"
     apply_ssh_keys
     [ -s "$KOS_KEYS" ] || [ -n "$pw" ] || warn "no valid ssh_key= and no password= in kos.conf: SSH login is off (the local console still works)"
 else

@@ -6,7 +6,7 @@ with POST /server/files/move so Moonraker's metadata stays consistent. State = l
 
 Usage: kos-archive [--once] [--backfill] [--dry-run]     Self-test: kos-archive --test
 """
-import json, os, sys, time, urllib.error, urllib.parse, urllib.request
+import json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 CONF = os.environ.get("KOS_CONF", "/config/kos.conf")
 STATE = os.environ.get("KOS_ARCHIVE_STATE", os.path.expanduser("~/printer_data/.kos-archive.last"))
@@ -19,26 +19,33 @@ def read_conf(path=CONF):
     """kos.conf, parsed exactly like cfg_lines in lib.sh (format described there; tests/test_lib_sh.sh compares them)."""
     ws = " \t\r\n\v\f"
     try:
-        lines = open(path, encoding="utf-8", errors="replace").read().split("\n")
+        text = open(path, encoding="utf-8", errors="replace", newline="").read()
     except OSError:
         return {}
     out, buf = {}, None
-    for ln in lines + [None]:
-        if ln is not None:
-            ln = ln.removesuffix("\r")
-            if buf is None and ln.lstrip(ws).startswith("#"):
-                continue
-            buf = ln if buf is None else buf + " " + ln.lstrip(ws)
-            if buf.endswith("\\"):
-                buf = buf[:-1].rstrip(ws)
-                continue
+
+    def emit():
         if buf is not None and "=" in buf:
             k, v = buf.split("=", 1)
             v = v.strip(ws)
             if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
                 v = v[1:-1]
             out[k.strip(ws)] = v
+
+    for ln in text.replace("\0", "").removeprefix("\ufeff").split("\n"):
+        ln = ln.removesuffix("\r")
+        if ln.lstrip(ws).startswith("#") or (buf is not None and re.match(r"[ \t\r\n\v\f]*[A-Za-z0-9_]+[ \t\r\n\v\f]*=", ln)):
+            emit()
+            buf = None
+            if ln.lstrip(ws).startswith("#"):
+                continue
+        buf = ln if buf is None else buf + " " + ln.lstrip(ws)
+        if buf.endswith("\\"):
+            buf = buf[:-1].rstrip(ws)
+            continue
+        emit()
         buf = None
+    emit()
     return out
 
 

@@ -1,6 +1,6 @@
 # Raspberry Pi CM5 (BCM2712), with the CM4 (BCM2711) kernel on the same card as an untested bonus (PLAN §14).
 BOARD=cm5
-# Raspberry Pi's trixie repo: firmware, both kernels, Wi-Fi firmware. Everything else is Debian.
+# Raspberry Pi's trixie repo: firmware, both kernels, Wi-Fi firmware. Everything else is Debian (pin: customize.sh).
 BOARD_APT_LINE='deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.com/debian trixie main'
 # Bootstrap key: the .deb, not raspberrypi.gpg.key (see customize.sh). Bump both lines when the Packages index shows a
 # newer one; take the hash from that signed index (InRelease -> Packages -> SHA256), not from the download.
