@@ -64,13 +64,14 @@ that prerelease and its tag first if you really want to rebuild it.
 
 - **Actions, General:** workflow permissions "Read repository contents" (the default for new repositories). Each
   job asks for what it needs.
-- **`main`:** the weekly bot pushes to `main` with `GITHUB_TOKEN`. Classic branch protection that requires pull
-  requests or status checks blocks that push. Use a ruleset instead and add the GitHub Actions app as a bypass actor,
-  or leave `main` unprotected. Pushes made with `GITHUB_TOKEN` do not trigger other workflows, so `tests` does not run
-  again on the bot commit; the weekly job has already run `tests/run.sh` on it. Required checks for Dependabot clash
-  with this push; see [Dependabot](#dependabot) below.
-- **Tags:** a tag ruleset on `v*` so that only maintainers can create release tags, and on `weekly-*` so that only
-  the GitHub Actions app can.
+- **`main`:** a ruleset with **Require status checks to pass** (the five `tests` jobs, see [Dependabot](#dependabot))
+  and **Block force pushes**, with the KOS bot GitHub App as the only bypass actor. The weekly `commit` job pushes the
+  pin bump with that App's token, so the push gets past the required checks and still triggers `tests` on the bot
+  commit. Setup: [The KOS bot GitHub App](#the-kos-bot-github-app).
+- **Tags:** a tag ruleset on `v*` so that only maintainers (repository admins as bypass) can create release tags.
+  `weekly-*` tags are created by the publish job with `GITHUB_TOKEN`; GitHub does not offer that token as a ruleset
+  bypass actor, so leave `weekly-*` unrestricted and rely on immutable releases (below) to stop a published weekly
+  from being swapped.
 - **Releases:** turn on **immutable releases** (Settings, General, Releases). A published weekly's files and its
   `weekly-*` tag can then no longer be swapped between hardware testing and the `v*` tag that republishes them.
   `release.yml` relies on it: its attestation check binds the files to the commit, not to one particular weekly.
@@ -96,36 +97,31 @@ Dependabot does not touch `build/pins.env`; the weekly workflow bumps those pins
 Settings it needs:
 
 - **General, Pull Requests:** turn on **Allow auto-merge**. Without it `gh pr merge --auto` fails.
-- **`main` ruleset:** **Require status checks to pass**, listing every test job from `.github/workflows/test.yml`
-  (unit, lint, nginx, config or similar; TODO: exact check names to be filled in). Auto-merge only waits for
-  *required* checks; with none required it merges at once.
+- **`main` ruleset:** **Require status checks to pass**, listing all five jobs of `.github/workflows/test.yml`:
+  `unit (tests/run.sh)`, `lint (shellcheck, actionlint)`, `config (units, sudoers, sshd, kos-config)`,
+  `nginx (Host and Origin checks)` and `mkimage (partitioning round-trip)`. Auto-merge only waits for *required*
+  checks; with none required it merges at once.
 - **Code security:** Dependabot version updates are configured by the file; Dependabot alerts and security updates
   are optional extras.
 
-#### Pending decision: the weekly push and required checks (C2-5)
+### The KOS bot GitHub App
 
-> **Draft, pending the owner's choice. Nothing below is set up yet.**
+The weekly pin bump is pushed by a small private GitHub App, so `main` can require passing checks (needed for safe
+auto-merge) while the bump still lands without a human. Its token lives one hour and only the weekly `commit` job
+mints it. One-time setup:
 
-Required checks on `main` block the weekly bot's direct push of `build(pins): ...`, unless the pusher is a bypass
-actor of the ruleset. GitHub may not offer `GITHUB_TOKEN` (the GitHub Actions app) as a bypass actor on a repository
-ruleset, so the setup in the `main` bullet above may not be possible as written. Options:
+1. **Settings, Developer settings, GitHub Apps, New GitHub App** (under your account). Name it e.g. `kos-bot`;
+   homepage = the repository URL; untick **Webhook, Active**; **Repository permissions: Contents: Read and write**
+   (Metadata: read is added automatically), nothing else; **Where can this GitHub App be installed: Only on this
+   account**. Create it.
+2. On the App's page note the **App ID**, then **Generate a private key** (a `.pem` file downloads).
+3. **Install App**, choose this repository only.
+4. In this repository: **Settings, Secrets and variables, Actions**: add the variable `KOS_BOT_APP_ID` (the App ID)
+   and the secret `KOS_BOT_PRIVATE_KEY` (the whole `.pem` file). Delete the downloaded `.pem` afterwards.
+5. In the `main` ruleset (above), add the App under **Bypass list**, mode **Always**.
 
-- **(a) Private GitHub App (recommended).** The owner creates a free GitHub App under their account, installed on
-  this repository only, with only *Contents: read and write*. Its ID and private key go in repository secrets. The
-  weekly `commit` job mints a one-hour token with `actions/create-github-app-token` (pinned by SHA) and pushes with
-  it. The App is the only bypass actor on the `main` ruleset, so it can push the pins and nothing else can skip the
-  checks. Its pushes do trigger workflows, so `tests` also runs on the bot commit. Cost: creating the App once and
-  about five lines in `weekly.yml`.
-- **(b) Weekly opens a pull request and auto-merges it.** No bypass actor needed. But pull requests opened with
-  `GITHUB_TOKEN` do not trigger workflows, so the required checks never run and the pull request waits forever.
-  It works only with an App or personal token, which brings back the setup cost of (a) plus more moving parts: the
-  build run has to wait for the merge, and the bump-then-build flow has to change.
-- **(c) No required checks; `automerge.yml` merges after `tests` passes.** Leave `main` without a ruleset, so the
-  weekly push keeps working. `automerge.yml` runs on `workflow_run` of `tests` for Dependabot pull requests and
-  merges only if the run succeeded. No App, but `main` has no protection at all, and a `workflow_run` job with write
-  access needs care.
-- A personal access token as bypass actor also works, but it is a long-lived secret with the owner's full rights.
-  Not recommended.
+Without the App the weekly `commit` job fails at the token step and nothing is pushed; builds and Dependabot are not
+affected.
 
 ## Checks
 
